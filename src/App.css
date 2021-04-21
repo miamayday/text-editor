@@ -33,10 +33,14 @@
   background-color: rgb(255, 252, 244);
 }
 
+.paragraph:focus {
+  outline: none;
+}
+
 .cursor {
   width: 2px;
   height: 28px;
-  position: absolute;
+  position: relative;
   font-size: 20px;
   background-color: rgb(139, 230, 210);
 }

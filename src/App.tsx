@@ -1,4 +1,4 @@
-import React from 'react'
+import { Component } from 'react'
 import Editor from './Editor'
 import './App.css'
 
@@ -6,7 +6,7 @@ type MyProps = {}
 
 type MyState = {}
 
-class App extends React.Component<MyProps, MyState> {
+class App extends Component<MyProps, MyState> {
   state: MyState = {}
   render() {
     return (

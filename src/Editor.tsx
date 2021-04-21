@@ -1,4 +1,4 @@
-import { Component, MouseEvent } from 'react'
+import React from 'react'
 
 type EditorProps = {}
 
@@ -27,7 +27,7 @@ type EditorState = {
   paragraphList: Array<string>
 }
 
-class Editor extends Component<EditorProps, EditorState> {
+class Editor extends React.Component<EditorProps, EditorState> {
   constructor(props: EditorProps) {
     super(props)
     this.state = {
@@ -43,17 +43,18 @@ class Editor extends Component<EditorProps, EditorState> {
     }
 
     this.setCursor = this.setCursor.bind(this)
+    this.handleKeyDown = this.handleKeyDown.bind(this)
   }
 
-  calcLeft(left: number) {
+  calcLeft(left: number): number {
     return left - 1
   }
 
-  calcTop(top: number) {
+  calcTop(top: number): number {
     return top - 4
   }
 
-  getCoords(el: Element, offset: number) {
+  getCoords(el: Element, offset: number): [number, number] {
     const range = document.createRange()
     range.setStart(el.childNodes[0], offset)
     range.setEnd(el.childNodes[0], offset)
@@ -64,13 +65,14 @@ class Editor extends Component<EditorProps, EditorState> {
   }
 
   // scroll event not checked!!
-  handleKeyDown(event: KeyboardEvent) {
+  handleKeyDown(event: React.KeyboardEvent): void {
+    event.preventDefault()
     if (this.state.cursor === undefined) {
       return
     }
   }
 
-  setCursor(event: MouseEvent) {
+  setCursor(event: React.MouseEvent): void {
     event.preventDefault()
     if (event.target instanceof Element) {
       const el = event.target
@@ -125,23 +127,31 @@ class Editor extends Component<EditorProps, EditorState> {
     }
   }
 
+  handleClick(event: React.MouseEvent): void {
+    console.log(event)
+  }
+
+  handleInput(event: React.FormEvent): void {
+    console.log(event)
+  }
+
+  handleChange(event: React.FormEvent): void {
+    console.log(event)
+  }
+
   render() {
     return (
-      <div className="editor" onClick={this.setCursor}>
+      <div className="editor">
         {this.state.paragraphList.map((p, i) => (
-          <div key={i} className="paragraph">
+          <div
+            key={i}
+            className="paragraph"
+            contentEditable={true}
+            suppressContentEditableWarning={true}
+          >
             {p}
           </div>
         ))}
-        {this.state.cursor && (
-          <div
-            className="cursor"
-            style={{
-              left: this.state.cursor.x + 'px',
-              top: this.state.cursor.y + 'px'
-            }}
-          ></div>
-        )}
       </div>
     )
   }
