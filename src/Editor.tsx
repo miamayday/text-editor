@@ -1,4 +1,6 @@
 import React from 'react'
+import Document from './Document'
+import type { Style } from './Document'
 
 type EditorProps = {}
 
@@ -38,7 +40,22 @@ type EditorState = {
   direction?: Direction
   pindex?: number
   paragraphList: Array<string>
+  document: Document
 }
+
+const initialParagraphList = [
+  'This is an example text.',
+  '',
+  'Another one.',
+  '',
+  'This example positions a "highlight" rectangle behind the contents of a range. The range\'s content starts here and continues on until it ends here. The bounding client rectangle contains everything selected in the range.',
+  '',
+  'More text.',
+  '',
+  'Should be scrolling soon.',
+  '',
+  'The European languages are members of the same family. Their separate existence is a myth. For science, music, sport, etc, Europe uses the same vocabulary. The languages only differ in their grammar, their pronunciation and their most common words.'
+]
 
 class Editor extends React.Component<EditorProps, EditorState> {
   constructor(props: EditorProps) {
@@ -46,19 +63,8 @@ class Editor extends React.Component<EditorProps, EditorState> {
     this.state = {
       options: { lineHeight: 28, bold: false },
       keys: { ctrlOn: false },
-      paragraphList: [
-        'This is an example text.',
-        '',
-        'Another one.',
-        '',
-        'This example positions a "highlight" rectangle behind the contents of a range. The range\'s content starts here and continues on until it ends here. The bounding client rectangle contains everything selected in the range.',
-        '',
-        'More text.',
-        '',
-        'Should be scrolling soon.',
-        '',
-        'The European languages are members of the same family. Their separate existence is a myth. For science, music, sport, etc, Europe uses the same vocabulary. The languages only differ in their grammar, their pronunciation and their most common words.'
-      ]
+      paragraphList: [],
+      document: new Document({})
     }
 
     this.setCaret = this.setCaret.bind(this)
@@ -579,6 +585,9 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
       //this.setState({ direction: undefined })
 
+      if (this.state.paragraphList.length === 0) {
+      }
+
       let pindex = 0
       let prev = el.previousSibling
       while (prev) {
@@ -619,7 +628,42 @@ class Editor extends React.Component<EditorProps, EditorState> {
     }
   }
 
+  convertStyle(style: Style): Object {
+    const inline = {
+      fontWeight: 'normal',
+      fontStyle: 'normal'
+    }
+    if (style.bold) {
+      inline.fontWeight = 'bold'
+    }
+    if (style.italic) {
+      inline.fontStyle = 'italic'
+    }
+    return inline
+  }
+
   render() {
+    return (
+      <div className="app">
+        <div className="editor">
+          {this.state.document.getParagraphs().map((p, i) => (
+            <p key={`p-${i}`} className="paragraph">
+              {p.contents.map((node, j) => (
+                <span
+                  key={`span-${i}-${j}`}
+                  style={this.convertStyle(node.style)}
+                >
+                  {node.text}
+                </span>
+              ))}
+            </p>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  /*render() {
     return (
       <div className="app">
         <div
@@ -629,9 +673,9 @@ class Editor extends React.Component<EditorProps, EditorState> {
           tabIndex={0}
         >
           {this.state.paragraphList.map((p, i) => (
-            <div key={i} className="paragraph">
+            <p key={i} className="paragraph">
               {p}
-            </div>
+            </p>
           ))}
           {this.state.caret && (
             <div
@@ -645,7 +689,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
         </div>
       </div>
     )
-  }
+  }*/
 }
 
 export default Editor

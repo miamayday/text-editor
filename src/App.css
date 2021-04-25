@@ -9,7 +9,8 @@
   width: 600px;
   height: 400px;
   cursor: text;
-  overflow-y: scroll;
+  overflow-y: auto;
+  border: 1px solid rgb(210, 214, 248);
 }
 
 .editor {
@@ -36,8 +37,14 @@
   word-wrap: break-word;
 }
 
-.paragraph:focus {
-  outline: none;
+.paragraph span {
+  font-size: 16px;
+  font-family: 'Lora', serif;
+  color: rgb(46, 46, 46);
+  line-height: 28px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .caret {

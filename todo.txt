@@ -1,3 +1,4 @@
 scrolling
 tree structure?
 rich editing
+text nodes instead of spans
