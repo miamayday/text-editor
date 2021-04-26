@@ -1,4 +1,3 @@
-import { rootCertificates } from 'node:tls'
 import React from 'react'
 
 type DocumentProps = {}
@@ -33,12 +32,23 @@ const n5: TextNode = {
   style: normal,
   text: ' elements. This is the second line of the first paragraph.'
 }
-const n6: TextNode = { style: normal, text: 'This is a new paragraph.' }
+const n6: TextNode = { style: normal, text: 'This is the third paragraph.' }
+const n7: TextNode = { style: normal, text: '' }
+const n8: TextNode = {
+  style: normal,
+  text:
+    'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus placerat eleifend iaculis. Morbi orci urna, tristique in auctor id, ultrices sed neque. Suspendisse eget neque orci. Cras sed tempor nulla. Sed congue arcu id suscipit viverra. Vestibulum sit amet commodo erat. Sed egestas blandit ex, eget suscipit diam semper non. Sed id sagittis purus. Aenean placerat sapien id ultrices congue. Morbi congue lorem sed felis molestie, id porta justo pellentesque.'
+}
 
 const p1: Paragraph = { contents: [n1, n2, n3, n4, n5] }
 const p2: Paragraph = { contents: [n6] }
+const linebreak: Paragraph = { contents: [n7] }
+const p4: Paragraph = { contents: [n8] }
 examples[0] = p1
-examples[1] = p2
+examples[1] = linebreak
+examples[2] = p2
+examples[3] = linebreak
+examples[4] = p4
 
 class Document extends React.Component<DocumentProps, DocumentState> {
   constructor(props: DocumentProps) {
