@@ -7,12 +7,12 @@ export type Style = {
   italic: boolean
 }
 
-type TextNode = {
+export type TextNode = {
   style: Style
   text: string
 }
 
-type Paragraph = {
+export type Paragraph = {
   contents: Array<TextNode>
 }
 
@@ -58,7 +58,11 @@ class Document extends React.Component<DocumentProps, DocumentState> {
     }
   }
 
-  public getParagraphs(): Array<Paragraph> {
+  isEmpty(): boolean {
+    return this.state.paragraphs.length === 0
+  }
+
+  getParagraphs(): Array<Paragraph> {
     return this.state.paragraphs
   }
 }

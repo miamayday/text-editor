@@ -585,9 +585,10 @@ class Editor extends React.Component<EditorProps, EditorState> {
         return
       }
 
-      //this.setState({ direction: undefined })
+      this.setState({ direction: undefined })
 
       if (this.state.paragraphList.length === 0) {
+        return
       }
 
       let pindex = 0

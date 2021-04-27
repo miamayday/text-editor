@@ -8,6 +8,15 @@
   width: 600px;
 }
 
+.editor {
+  scrollbar-width: auto !important;
+  scrollbar-color: #dfdfdf #f1f1f1 !important;
+}
+
+.editor:focus {
+  outline: none;
+}
+
 .toolbar {
   border: 1px solid rgb(210, 214, 248);
   margin-top: 30px;
@@ -20,9 +29,17 @@
 .toolbar-icon {
   height: 20px;
   width: 20px;
-  background: rgb(236, 236, 236);
   padding: 8px;
   margin: 6px;
+  background: rgb(236, 236, 236);
+}
+
+.toolbar-icon.active {
+  background: rgb(222, 228, 255);
+}
+
+.toolbar-icon.active:hover {
+  background: rgb(212, 220, 255);
 }
 
 .toolbar-icon:not(:first-child) {
@@ -30,15 +47,31 @@
 }
 
 .toolbar-icon:hover {
-  cursor: pointer;
+  background: rgb(228, 228, 228);
 }
 
 .toolbar-icon path,
 .toolbar-icon g {
-  fill: rgb(172, 172, 172);
+  fill: rgb(196, 196, 196);
+}
+
+.toolbar-icon:hover path,
+.toolbar-icon:hover g {
+  fill: rgb(160, 160, 160);
+}
+
+.toolbar-icon.active path,
+.toolbar-icon.active g {
+  fill: rgb(176, 181, 204);
+}
+
+.toolbar-icon.active:hover path,
+.toolbar-icon.active:hover g {
+  fill: rgb(143, 148, 172);
 }
 
 .document {
+  position: relative;
   height: 300px;
   cursor: text;
   overflow-y: auto;
@@ -48,13 +81,12 @@
   margin-bottom: 30px;
 }
 
-.editor {
-  scrollbar-width: auto !important;
-  scrollbar-color: #dfdfdf #f1f1f1 !important;
-}
-
-.editor:focus {
-  outline: none;
+.caret {
+  width: 2px;
+  height: 28px;
+  position: absolute;
+  font-size: 20px;
+  background-color: rgb(139, 230, 210);
 }
 
 .paragraph {
@@ -70,6 +102,7 @@
 }
 
 .paragraph span {
+  display: inline-block;
   font-size: 16px;
   font-family: 'Lora', serif;
   color: rgb(46, 46, 46);
@@ -83,12 +116,4 @@
   content: '';
   display: inline-block;
   width: 0px;
-}
-
-.caret {
-  width: 2px;
-  height: 28px;
-  position: absolute;
-  font-size: 20px;
-  background-color: rgb(139, 230, 210);
 }
