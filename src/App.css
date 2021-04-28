@@ -4,8 +4,10 @@
   justify-content: center;
 }
 
+/* Editor */
+
 .editor {
-  width: 600px;
+  width: 700px;
 }
 
 .editor {
@@ -16,6 +18,8 @@
 .editor:focus {
   outline: none;
 }
+
+/* Toolbar */
 
 .toolbar {
   border: 1px solid rgb(210, 214, 248);
@@ -70,6 +74,8 @@
   fill: rgb(143, 148, 172);
 }
 
+/* Document */
+
 .document {
   position: relative;
   height: 300px;
@@ -92,28 +98,45 @@
 .paragraph {
   margin: 0;
   padding: 0 100px;
-  /*font-size: 16px;
-  font-family: 'Lora', serif;
-  color: rgb(46, 46, 46);
-  line-height: 28px;
-  overflow-x: auto;
+  /*font-size: 0;*/
+  /*display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;*/
+  /*overflow-x: auto;
   white-space: pre-wrap;
   word-wrap: break-word;*/
 }
 
 .paragraph span {
-  display: inline-block;
+  /*margin: 0;
+  padding: 0;*/
   font-size: 16px;
   font-family: 'Lora', serif;
   color: rgb(46, 46, 46);
   line-height: 28px;
-  overflow-x: auto;
+  /*overflow-x: auto;
   white-space: pre-wrap;
+  word-wrap: break-word;**/
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
   word-wrap: break-word;
+  word-break: break-all;
+  word-break: break-word;
+  /*hyphens: auto;*/
+  background-color: rgb(211, 226, 255);
 }
 
-.paragraph:after {
+.paragraph span:empty:before {
+  content: ' ';
+  white-space: pre;
+}
+
+/*.paragraph:after {
   content: '';
   display: inline-block;
   width: 0px;
 }
+
+.paragraph:after span {
+  line-height: 28px;
+}*/

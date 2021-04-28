@@ -1,3 +1,4 @@
-scrolling
 rich editing
 footer
+caret jump prev end
+empty lines
