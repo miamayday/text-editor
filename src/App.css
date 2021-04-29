@@ -126,17 +126,17 @@
   background-color: rgb(211, 226, 255);
 }
 
-.paragraph span:empty:before {
-  content: ' ';
+/*.paragraph span:empty:before {
+  content: '';
   white-space: pre;
-}
+}*/
 
-/*.paragraph:after {
+.paragraph:after {
   content: '';
   display: inline-block;
-  width: 0px;
+  width: 0;
 }
 
-.paragraph:after span {
+/*.paragraph:after span {
   line-height: 28px;
 }*/

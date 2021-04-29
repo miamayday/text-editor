@@ -1,4 +1,4 @@
 rich editing
 footer
 caret jump prev end
-empty lines
+caret fails when clicking on blank space (p,s = 0)

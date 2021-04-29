@@ -26,10 +26,9 @@ type EditorState = {
   direction?: Direction
   pindex?: number
   sindex?: number
-  paragraphs: Array<Paragraph>
+  paragraphs: Array<Array<TextNode>>
 }
 
-const examples: Array<Paragraph> = []
 const bold: Style = { bold: true, italic: false }
 const italic: Style = { bold: false, italic: true }
 const normal: Style = { bold: false, italic: false }
@@ -41,23 +40,22 @@ const n5: TextNode = {
   style: normal,
   text: ' test. elements. This is the se co   nd line of the first paragraph.'
 }
-const n6: TextNode = { style: normal, text: 'This is the third paragraph.' }
-const n7: TextNode = { style: normal, text: '' }
-const n8: TextNode = {
+const n6: TextNode = { style: normal, text: '' }
+const n7: TextNode = { style: normal, text: 'This is the third paragraph.' }
+const n8: TextNode = { style: normal, text: '' }
+const n9: TextNode = {
   style: normal,
   text:
     'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus placerat eleifend iaculis. Morbi orci urna, tristique in auctor id, ultrices sed neque. Suspendisse eget neque orci. Cras sed tempor nulla. Sed congue arcu id suscipit viverra. Vestibulum sit amet commodo erat. Sed egestas blandit ex, eget suscipit diam semper non. Sed id sagittis purus. Aenean placerat sapien id ultrices congue. Morbi congue lorem sed felis molestie, id porta justo pellentesque.'
 }
 
-const p1: Paragraph = { contents: [n1, n2, n3, n4, n5] }
-const p2: Paragraph = { contents: [n6] }
-const linebreak: Paragraph = { contents: [n7] }
-const p4: Paragraph = { contents: [n8] }
-examples[0] = p1
-examples[1] = linebreak
-examples[2] = p2
-examples[3] = linebreak
-examples[4] = p4
+const examples: Array<Array<TextNode>> = [
+  [n1, n2, n3, n4, n5],
+  [n6],
+  [n7],
+  [n8],
+  [n9]
+]
 
 class Editor extends React.Component<EditorProps, EditorState> {
   constructor(props: EditorProps) {
@@ -71,6 +69,13 @@ class Editor extends React.Component<EditorProps, EditorState> {
     }
 
     this.handleClick = this.handleClick.bind(this)
+    this.handleKeyDown = this.handleKeyDown.bind(this)
+  }
+
+  componentDidMount(): void {
+    if (this.state.direction !== undefined) {
+      // move caret after write
+    }
   }
 
   nodeToCSSProps(style: Style): React.CSSProperties {
@@ -100,7 +105,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
   }
 
   calcTop(top: number): number {
-    return top - 4
+    return top - 5
   }
 
   getRectFromRange(node: Node, offset: number): DOMRect {
@@ -122,44 +127,24 @@ class Editor extends React.Component<EditorProps, EditorState> {
   setCaretForEmptyLine(span: Element): void {
     console.log('set caret for empty line')
 
-    console.log(span)
-
-    /*const d = document.querySelectorAll('.document')[0]
-    const cont = d.getBoundingClientRect()
-    span.
-    const x = this.calcLeft(span.offsetLeft - cont.left)
-    const y = this.calcTop(rect.top - cont.top + d.scrollTop)
-
+    const paragraph = span.parentElement
     const pindex = span.getAttribute('p-index')
     const sindex = span.getAttribute('s-index')
-    if (pindex !== null && sindex !== null) {
-      const caret = { offset: 0, x, y }
-      this.setState({
-        caret,
-        pindex: Number(pindex),
-        sindex: Number(sindex)
-      })
-    }*/
-
-    /*const rect = this.getRectFromRange(span, 0)
-    console.log(rect)
-    const d = document.querySelectorAll('.document')[0]
-    const cont = d.getBoundingClientRect()
-    const x = this.calcLeft(rect.left - cont.left)
-    const y = this.calcTop(rect.top - cont.top + d.scrollTop)
-
-    console.log(x, y)
-
-    const pindex = span.getAttribute('p-index')
-    const sindex = span.getAttribute('s-index')
-    if (pindex !== null && sindex !== null) {
-      const caret = { offset: 0, x, y }
-      this.setState({
-        caret,
-        pindex: Number(pindex),
-        sindex: Number(sindex)
-      })
-    }*/
+    if (paragraph !== null && pindex !== null && sindex !== null) {
+      const html: HTMLElement = paragraph.querySelectorAll('span')[
+        Number(sindex)
+      ]
+      if (html !== null) {
+        const x = html.offsetLeft
+        const y = paragraph.offsetTop
+        const caret = { offset: 0, x, y }
+        this.setState({
+          caret,
+          pindex: Number(pindex),
+          sindex: Number(sindex)
+        })
+      }
+    }
   }
 
   setCaretForSpan(span: Element, offset: number): void {
@@ -198,6 +183,8 @@ class Editor extends React.Component<EditorProps, EditorState> {
       return
     }
 
+    // TODO: Fix p,s = 0 errors
+
     const rect = this.getRectFromRange(span.childNodes[0], offset)
 
     const d = document.querySelectorAll('.document')[0]
@@ -231,7 +218,29 @@ class Editor extends React.Component<EditorProps, EditorState> {
           const y = this.calcTop(charRect.top - docRect.top + d.scrollTop)*/
   }
 
+  handleKeyDown(event: React.KeyboardEvent): void {
+    event.preventDefault()
+
+    if (
+      this.state.caret !== undefined &&
+      this.state.pindex !== undefined &&
+      this.state.sindex !== undefined
+    ) {
+      const node = this.state.paragraphs[this.state.pindex][this.state.sindex]
+      node.text = [
+        node.text.slice(0, this.state.caret.offset),
+        event.key,
+        node.text.slice(this.state.caret.offset)
+      ].join('')
+      const paragraphs = this.state.paragraphs
+      paragraphs[this.state.pindex][this.state.sindex] = node
+      this.setState({ direction: Direction.RightAfterWrite, paragraphs })
+    }
+  }
+
   handleClick(event: React.MouseEvent): void {
+    event.preventDefault()
+
     if (event.target instanceof Element) {
       const el = event.target
       if (el.className !== 'text-node' && el.className !== 'paragraph') {
@@ -266,13 +275,18 @@ class Editor extends React.Component<EditorProps, EditorState> {
           <BoldIcon className="toolbar-icon active" />
           <ItalicIcon className="toolbar-icon" />
         </div>
-        <div className="document" onClick={this.handleClick}>
+        <div
+          className="document"
+          onClick={this.handleClick}
+          onKeyDown={this.handleKeyDown}
+          tabIndex={0}
+        >
           {this.state.caret && (
             <div className="caret" style={this.caretToCSSProps()}></div>
           )}
           {this.state.paragraphs.map((p, i) => (
             <p key={`p-${i}`} className="paragraph">
-              {p.contents.map((node, j) => (
+              {p.map((node, j) => (
                 <span
                   key={`span-${i}-${j}`}
                   p-index={i}
