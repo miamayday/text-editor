@@ -95,6 +95,15 @@
   background-color: rgb(139, 230, 210);
 }
 
+.mouse {
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  font-size: 20px;
+  background-color: rgba(255, 142, 185, 0.527);
+  z-index: 9999;
+}
+
 .paragraph {
   margin: 0;
   padding: 0 100px;

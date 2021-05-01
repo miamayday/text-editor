@@ -1,5 +1,5 @@
 import React from 'react'
-import type { TextNode, Paragraph, Style } from './Document'
+import type { TextNode, Style } from './Document'
 import { ReactComponent as BoldIcon } from './assets/bold.svg'
 import { ReactComponent as ItalicIcon } from './assets/italic.svg'
 
@@ -7,6 +7,11 @@ type EditorProps = {}
 
 type Caret = {
   offset: number
+  x: number
+  y: number
+}
+
+type Mouse = {
   x: number
   y: number
 }
@@ -23,6 +28,7 @@ enum Direction {
 type EditorState = {
   styleProps: React.CSSProperties
   caret?: Caret
+  mouse?: Mouse
   direction?: Direction
   pindex?: number
   sindex?: number
@@ -74,9 +80,15 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
   componentDidMount(): void {
     if (this.state.direction !== undefined) {
-      // move caret after write
+      switch (this.state.direction) {
+        case Direction.RightAfterWrite:
+          this.shiftRight()
+          break
+      }
     }
   }
+
+  /* Stylers */
 
   nodeToCSSProps(style: Style): React.CSSProperties {
     const props: React.CSSProperties = { ...this.state.styleProps }
@@ -99,6 +111,8 @@ class Editor extends React.Component<EditorProps, EditorState> {
       return {}
     }
   }
+
+  /* Coords */
 
   calcLeft(left: number): number {
     return left - 2
@@ -124,6 +138,63 @@ class Editor extends React.Component<EditorProps, EditorState> {
     return [x, y]
   }
 
+  /* Movers */
+
+  shiftRight(): void {
+    if (this.state.caret && this.state.pindex && this.state.sindex) {
+      let offset = this.state.caret.offset + 1
+      let pindex = this.state.pindex
+      let sindex = this.state.sindex
+
+      // go to next span
+      if (offset > this.state.paragraphs[pindex][sindex].text.length) {
+        offset = 0
+        sindex++
+      }
+
+      // go to next paragraph
+      if (sindex >= this.state.paragraphs[pindex].length) {
+        sindex = 0
+        pindex++
+      }
+
+      // reach the end of the document
+      if (pindex >= this.state.paragraphs.length) {
+        // do nuthin!
+        return
+      }
+
+      const span = document.querySelectorAll('.paragraph')[pindex].children[
+        sindex
+      ]
+      const [x, y] = this.getCoords(span, offset)
+      const caret = { offset, x, y }
+      this.setState({ caret, pindex, sindex, direction: undefined })
+    }
+  }
+
+  /* Typing */
+
+  write(key: string): void {
+    if (
+      this.state.caret !== undefined &&
+      this.state.pindex !== undefined &&
+      this.state.sindex !== undefined
+    ) {
+      const node = this.state.paragraphs[this.state.pindex][this.state.sindex]
+      node.text = [
+        node.text.slice(0, this.state.caret.offset),
+        key,
+        node.text.slice(this.state.caret.offset)
+      ].join('')
+      const paragraphs = this.state.paragraphs
+      paragraphs[this.state.pindex][this.state.sindex] = node
+      this.setState({ direction: Direction.RightAfterWrite, paragraphs })
+    }
+  }
+
+  /* Setters */
+
   setCaretForEmptyLine(span: Element): void {
     console.log('set caret for empty line')
 
@@ -131,9 +202,11 @@ class Editor extends React.Component<EditorProps, EditorState> {
     const pindex = span.getAttribute('p-index')
     const sindex = span.getAttribute('s-index')
     if (paragraph !== null && pindex !== null && sindex !== null) {
+      // need html for the offset
       const html: HTMLElement = paragraph.querySelectorAll('span')[
         Number(sindex)
       ]
+
       if (html !== null) {
         const x = html.offsetLeft
         const y = paragraph.offsetTop
@@ -168,10 +241,75 @@ class Editor extends React.Component<EditorProps, EditorState> {
     }
   }
 
-  setCaretForParagraph(paragraph: Element, offset: number): void {
-    console.log('set caret for paragraph')
+  setCaretForParagraph(
+    p: HTMLElement,
+    offset: number,
+    pageX: number,
+    pageY: number
+  ): void {
+    console.log('set caret for paragraph', p)
 
-    const span = paragraph.children[0]
+    const pindex = p.getAttribute('p-index')
+    if (pindex !== null) {
+      const paragraph = this.state.paragraphs[Number(pindex)]
+
+      const caret = { offset, x: 0, y: 0 }
+
+      let bestX = Number.MAX_VALUE
+      let bestY = Number.MAX_VALUE
+      let bestDiff = Number.MAX_VALUE
+
+      const d = document.querySelectorAll('.document')[0]
+      const cont = d.getBoundingClientRect()
+
+      for (let sindex = 0; sindex < paragraph.length; sindex++) {
+        const node = paragraph[sindex]
+        console.log(node.text)
+        if (node.text.length >= offset) {
+          const span = p.children[sindex]
+          const rect = this.getRectFromRange(span.childNodes[0], offset)
+          const [x, y] = [rect.left, rect.top]
+          console.log(x, y, 'VS', pageX, pageY)
+
+          // TODO: when surpass y just stop
+
+          const diff = Math.sqrt(
+            Math.pow(pageX - x, 2) + Math.pow(pageY - y, 2)
+          )
+          if (diff < bestDiff) {
+            bestX = x
+            bestY = y
+            bestDiff = diff
+
+            caret.x = this.calcLeft(rect.left - cont.left)
+            caret.y = this.calcTop(rect.top - cont.top + d.scrollTop)
+          }
+        } else if (node.text.length === 0) {
+          console.log('empty string')
+
+          const x = cont.left + 100 // margin
+          const y = p.offsetTop + cont.top + d.scrollTop + 4 // (28 - 20) / 2
+          console.log(x, y, 'VS', pageX, pageY)
+          const diff = Math.sqrt(
+            Math.pow(pageX - x, 2) + Math.pow(pageY - y, 2)
+          )
+          if (diff < bestDiff) {
+            bestX = x
+            bestY = y
+            bestDiff = diff
+
+            caret.x = 100
+            caret.y = p.offsetTop
+          }
+        }
+      }
+
+      const mouse = { x: bestX, y: bestY }
+      this.setState({ caret })
+      this.setState({ mouse })
+    }
+
+    /*const span = paragraph.children[0]
     const pindex = span.getAttribute('p-index')
     const sindex = span.getAttribute('s-index')
     if (pindex === null || sindex === null) {
@@ -196,52 +334,23 @@ class Editor extends React.Component<EditorProps, EditorState> {
       caret,
       pindex: Number(pindex),
       sindex: Number(sindex)
-    })
+    })*/
 
-    //this.setState({ caret, pindex })
-    /*range.setStart(el.childNodes[0], offset + 1)
-          range.collapse()
-          const next = range.getClientRects()[0]
-          const diff = next.left - start.left
-          // could sharpen this... snaps too easily to start
-          if (event.clientX <= start.left + diff / 2) {
-            const d = document.querySelectorAll('.document')[0]
-            const cont = d.getBoundingClientRect()
-            const x = this.calcLeft(start.left - cont.left)
-            const y = this.calcTop(next.top - cont.top + d.scrollTop)
-            const caret = { offset, x, y }
-            this.setState({ caret, pindex })
-          }*/
-    /*const d = document.querySelectorAll('.document')[0]
-          const docRect = d.getBoundingClientRect()
-          const x = this.calcLeft(charRect.left - docRect.left)
-          const y = this.calcTop(charRect.top - docRect.top + d.scrollTop)*/
+    // TODO: start jumps prev end
   }
+
+  /* Event handlers */
 
   handleKeyDown(event: React.KeyboardEvent): void {
     event.preventDefault()
 
-    if (
-      this.state.caret !== undefined &&
-      this.state.pindex !== undefined &&
-      this.state.sindex !== undefined
-    ) {
-      const node = this.state.paragraphs[this.state.pindex][this.state.sindex]
-      node.text = [
-        node.text.slice(0, this.state.caret.offset),
-        event.key,
-        node.text.slice(this.state.caret.offset)
-      ].join('')
-      const paragraphs = this.state.paragraphs
-      paragraphs[this.state.pindex][this.state.sindex] = node
-      this.setState({ direction: Direction.RightAfterWrite, paragraphs })
-    }
+    //this.write(event.key)
   }
 
   handleClick(event: React.MouseEvent): void {
     event.preventDefault()
 
-    if (event.target instanceof Element) {
+    if (event.target instanceof HTMLElement) {
       const el = event.target
       if (el.className !== 'text-node' && el.className !== 'paragraph') {
         this.setState({
@@ -263,7 +372,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
       if (el.className === 'text-node') {
         this.setCaretForSpan(el, offset)
       } else if (el.className === 'paragraph') {
-        this.setCaretForParagraph(el, offset)
+        this.setCaretForParagraph(el, offset, event.pageX, event.pageY)
       }
     }
   }
@@ -271,6 +380,15 @@ class Editor extends React.Component<EditorProps, EditorState> {
   render() {
     return (
       <div className="editor">
+        {this.state.mouse && (
+          <div
+            className="mouse"
+            style={{
+              left: this.state.mouse.x + 'px',
+              top: this.state.mouse.y + 'px'
+            }}
+          ></div>
+        )}
         <div className="toolbar">
           <BoldIcon className="toolbar-icon active" />
           <ItalicIcon className="toolbar-icon" />
@@ -285,7 +403,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
             <div className="caret" style={this.caretToCSSProps()}></div>
           )}
           {this.state.paragraphs.map((p, i) => (
-            <p key={`p-${i}`} className="paragraph">
+            <p key={`p-${i}`} p-index={i} className="paragraph">
               {p.map((node, j) => (
                 <span
                   key={`span-${i}-${j}`}
