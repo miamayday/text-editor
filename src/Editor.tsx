@@ -2,6 +2,8 @@ import React from 'react'
 import type { TextNode, Style } from './Document'
 import { ReactComponent as BoldIcon } from './assets/bold.svg'
 import { ReactComponent as ItalicIcon } from './assets/italic.svg'
+import * as Coords from './editor/Coords'
+import * as Navigation from './editor/Navigation'
 
 type EditorProps = {}
 
@@ -114,29 +116,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
   /* Coords */
 
-  calcLeft(left: number): number {
-    return left - 2
-  }
-
-  calcTop(top: number): number {
-    return top - 5
-  }
-
-  getRectFromRange(node: Node, offset: number): DOMRect {
-    const range = document.createRange()
-    range.setStart(node, offset)
-    range.collapse()
-    return range.getBoundingClientRect()
-  }
-
-  getCoords(span: Element, offset: number): [number, number] {
-    const rect = this.getRectFromRange(span.childNodes[0], offset)
-    const d = document.querySelectorAll('.document')[0]
-    const cont = d.getBoundingClientRect()
-    const x = this.calcLeft(rect.left - cont.left)
-    const y = this.calcTop(rect.top - cont.top + d.scrollTop)
-    return [x, y]
-  }
+  // moved to editor/Coords
 
   /* Movers */
 
@@ -167,7 +147,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
       const span = document.querySelectorAll('.paragraph')[pindex].children[
         sindex
       ]
-      const [x, y] = this.getCoords(span, offset)
+      const [x, y] = Coords.getCoords(span, offset)
       const caret = { offset, x, y }
       this.setState({ caret, pindex, sindex, direction: undefined })
     }
@@ -195,43 +175,13 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
   /* Setters */
 
-  setCaretForEmptyLine(span: Element): void {
-    console.log('set caret for empty line')
-
-    const paragraph = span.parentElement
-    const pindex = span.getAttribute('p-index')
-    const sindex = span.getAttribute('s-index')
-    if (paragraph !== null && pindex !== null && sindex !== null) {
-      // need html for the offset
-      const html: HTMLElement = paragraph.querySelectorAll('span')[
-        Number(sindex)
-      ]
-
-      if (html !== null) {
-        const x = html.offsetLeft
-        const y = paragraph.offsetTop
-        const caret = { offset: 0, x, y }
-        this.setState({
-          caret,
-          pindex: Number(pindex),
-          sindex: Number(sindex)
-        })
-      }
-    }
-  }
-
-  setCaretForSpan(span: Element, offset: number): void {
+  setCaretForSpan(span: HTMLElement, offset: number): void {
     console.log('set caret for span')
-
-    if (span.textContent !== null && span.textContent.length === 0) {
-      this.setCaretForEmptyLine(span)
-      return
-    }
 
     const pindex = span.getAttribute('p-index')
     const sindex = span.getAttribute('s-index')
     if (pindex !== null && sindex !== null) {
-      const [x, y] = this.getCoords(span, offset)
+      const [x, y] = Coords.getCoords(span, offset)
       const caret = { offset, x, y }
       this.setState({
         caret,
@@ -252,91 +202,15 @@ class Editor extends React.Component<EditorProps, EditorState> {
     const pindex = p.getAttribute('p-index')
     if (pindex !== null) {
       const paragraph = this.state.paragraphs[Number(pindex)]
-
-      const caret = { offset, x: 0, y: 0 }
-
-      let bestX = Number.MAX_VALUE
-      let bestY = Number.MAX_VALUE
-      let bestDiff = Number.MAX_VALUE
-
-      const d = document.querySelectorAll('.document')[0]
-      const cont = d.getBoundingClientRect()
-
-      for (let sindex = 0; sindex < paragraph.length; sindex++) {
-        const node = paragraph[sindex]
-        console.log(node.text)
-        if (node.text.length >= offset) {
-          const span = p.children[sindex]
-          const rect = this.getRectFromRange(span.childNodes[0], offset)
-          const [x, y] = [rect.left, rect.top]
-          console.log(x, y, 'VS', pageX, pageY)
-
-          // TODO: when surpass y just stop
-
-          const diff = Math.sqrt(
-            Math.pow(pageX - x, 2) + Math.pow(pageY - y, 2)
-          )
-          if (diff < bestDiff) {
-            bestX = x
-            bestY = y
-            bestDiff = diff
-
-            caret.x = this.calcLeft(rect.left - cont.left)
-            caret.y = this.calcTop(rect.top - cont.top + d.scrollTop)
-          }
-        } else if (node.text.length === 0) {
-          console.log('empty string')
-
-          const x = cont.left + 100 // margin
-          const y = p.offsetTop + cont.top + d.scrollTop + 4 // (28 - 20) / 2
-          console.log(x, y, 'VS', pageX, pageY)
-          const diff = Math.sqrt(
-            Math.pow(pageX - x, 2) + Math.pow(pageY - y, 2)
-          )
-          if (diff < bestDiff) {
-            bestX = x
-            bestY = y
-            bestDiff = diff
-
-            caret.x = 100
-            caret.y = p.offsetTop
-          }
-        }
-      }
-
-      const mouse = { x: bestX, y: bestY }
-      this.setState({ caret })
-      this.setState({ mouse })
+      const state = Navigation.fixToNearestSpan(
+        p,
+        paragraph,
+        offset,
+        pageX,
+        pageY
+      )
+      this.setState({ ...state, pindex: Number(pindex) })
     }
-
-    /*const span = paragraph.children[0]
-    const pindex = span.getAttribute('p-index')
-    const sindex = span.getAttribute('s-index')
-    if (pindex === null || sindex === null) {
-      return
-    }
-
-    if (span.textContent !== null && span.textContent.length === 0) {
-      this.setCaretForEmptyLine(span)
-      return
-    }
-
-    // TODO: Fix p,s = 0 errors
-
-    const rect = this.getRectFromRange(span.childNodes[0], offset)
-
-    const d = document.querySelectorAll('.document')[0]
-    const cont = d.getBoundingClientRect()
-    const x = this.calcLeft(rect.left - cont.left)
-    const y = this.calcTop(rect.top - cont.top + d.scrollTop)
-    const caret = { offset, x, y }
-    this.setState({
-      caret,
-      pindex: Number(pindex),
-      sindex: Number(sindex)
-    })*/
-
-    // TODO: start jumps prev end
   }
 
   /* Event handlers */
