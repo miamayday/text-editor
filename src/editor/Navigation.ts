@@ -41,33 +41,6 @@ export function incrementOffset(
   return { offset, pindex, sindex }
 }
 
-export function outOfBounds(
-  p: Element,
-  arr: Array<TextNode>,
-  clickX: number
-): boolean {
-  const d = document.querySelectorAll('.document')[0]
-  const cont = d.getBoundingClientRect()
-
-  if (arr[0].text.length >= 1) {
-    const start = cont.left + 100 + 1
-    const rect = Coords.getRectFromRange(p.children[0].childNodes[0], 1)
-    const next = rect.left
-    if (clickX < Coords.calcMiddle(start, next)) {
-      return true
-    }
-  } else if (arr.length > 1) {
-    const start = cont.left + 100 + 1
-    const rect = Coords.getRectFromRange(p.children[1].childNodes[0], 0)
-    const next = rect.left
-    if (clickX < Coords.calcMiddle(start, next)) {
-      return true
-    }
-  }
-
-  return false
-}
-
 function binOffset(
   span: Element,
   node: TextNode,
@@ -261,50 +234,4 @@ export function fixToNearestSpan(
 
   const mouse: Type.Mouse = { x: bestX, y: bestY }
   return { caret, mouse, sindex: bestSindex }
-}
-
-export function snapToStart(
-  p: HTMLElement,
-  arr: Array<Array<TextNode>>,
-  clickX: number,
-  initialCaret: Type.Caret,
-  pindex: number,
-  initialSindex: number
-): {
-  caret: Type.Caret
-  pindex: number
-  sindex: number
-} {
-  // TODO: how to determine when to snap to start?
-  const caret = { ...initialCaret }
-  let sindex = initialSindex
-
-  // check if the user clicked outside the left bound
-  if (outOfBounds(p, arr[pindex], clickX)) {
-    console.log('snap to start')
-
-    // increment offset
-    const output = incrementOffset(caret.offset, pindex, sindex, arr)
-
-    if (output !== null) {
-      const { offset, pindex: pi, sindex: si } = output
-      if (pi === pindex) {
-        if (si === sindex) {
-          const [nextX, nextY] = Coords.getCoords(p.children[sindex], offset)
-          caret.x = 100
-          caret.y = nextY
-        } else {
-          const nextSpan = document.querySelectorAll('.paragraph')[pi].children[
-            si
-          ]
-          const [nextX, nextY] = Coords.getCoords(nextSpan, offset)
-          caret.x = 100
-          caret.y = nextY
-          sindex = si
-        }
-      }
-    }
-  }
-
-  return { caret, pindex, sindex }
 }
