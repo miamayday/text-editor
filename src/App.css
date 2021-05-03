@@ -81,7 +81,7 @@
   height: 300px;
   cursor: text;
   overflow-y: auto;
-  border: 1px solid rgb(210, 214, 248);
+  /*border: 1px solid rgb(210, 214, 248);*/
   scrollbar-width: auto !important;
   scrollbar-color: #dfdfdf #f1f1f1 !important;
   margin-bottom: 30px;

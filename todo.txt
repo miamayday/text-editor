@@ -1,4 +1,2 @@
 rich editing
 footer
-caret jump prev end
-caret fails when clicking on blank space (p,s = 0)

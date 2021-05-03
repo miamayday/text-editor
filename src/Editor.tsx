@@ -30,7 +30,7 @@ enum Direction {
 type EditorState = {
   styleProps: React.CSSProperties
   caret?: Caret
-  mouse?: Mouse
+  mouse?: Mouse // a pink square that acts a snapping guide
   direction?: Direction
   pindex?: number
   sindex?: number
@@ -122,28 +122,18 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
   shiftRight(): void {
     if (this.state.caret && this.state.pindex && this.state.sindex) {
-      let offset = this.state.caret.offset + 1
-      let pindex = this.state.pindex
-      let sindex = this.state.sindex
+      const output = Navigation.incrementOffset(
+        this.state.caret.offset,
+        this.state.pindex,
+        this.state.sindex,
+        this.state.paragraphs
+      )
 
-      // go to next span
-      if (offset > this.state.paragraphs[pindex][sindex].text.length) {
-        offset = 0
-        sindex++
-      }
-
-      // go to next paragraph
-      if (sindex >= this.state.paragraphs[pindex].length) {
-        sindex = 0
-        pindex++
-      }
-
-      // reach the end of the document
-      if (pindex >= this.state.paragraphs.length) {
-        // do nuthin!
+      if (output === null) {
         return
       }
 
+      const { offset, pindex, sindex } = output
       const span = document.querySelectorAll('.paragraph')[pindex].children[
         sindex
       ]
@@ -175,18 +165,54 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
   /* Setters */
 
-  setCaretForSpan(span: HTMLElement, offset: number): void {
-    console.log('set caret for span')
+  setCaretForSpan(
+    span: HTMLElement,
+    offset: number,
+    clickX: number,
+    clickY: number
+  ): void {
+    console.log('set caret for span', span)
 
-    const pindex = span.getAttribute('p-index')
-    const sindex = span.getAttribute('s-index')
-    if (pindex !== null && sindex !== null) {
+    const attrPindex = span.getAttribute('p-index')
+    const attrSindex = span.getAttribute('s-index')
+    if (attrPindex !== null && attrSindex !== null) {
+      let pindex = Number(attrPindex)
+      let sindex = Number(attrSindex)
+
       const [x, y] = Coords.getCoords(span, offset)
       const caret = { offset, x, y }
+
+      const p = document.querySelectorAll('.paragraph')[pindex]
+      const arr = this.state.paragraphs[pindex]
+
+      const d = document.querySelectorAll('.document')[0]
+      const cont = d.getBoundingClientRect()
+
+      const outOfBounds = Navigation.checkBounds(
+        p,
+        arr,
+        clickX,
+        cont.left + 100
+      )
+
+      if (outOfBounds && offset > 0) {
+        console.log('snap to start')
+        let nextOffset = offset + 1
+        if (nextOffset > arr[sindex].text.length) {
+          nextOffset = 0
+          sindex++
+        }
+        const span = p.children[sindex]
+        const rect = Coords.getRectFromRange(span.childNodes[0], nextOffset)
+        caret.x = 100 - 2 // width
+        caret.y = Coords.calcTop(rect.top - cont.top + d.scrollTop)
+      }
+
       this.setState({
         caret,
-        pindex: Number(pindex),
-        sindex: Number(sindex)
+        mouse: undefined,
+        pindex,
+        sindex
       })
     }
   }
@@ -194,8 +220,8 @@ class Editor extends React.Component<EditorProps, EditorState> {
   setCaretForParagraph(
     p: HTMLElement,
     offset: number,
-    pageX: number,
-    pageY: number
+    clickX: number,
+    clickY: number
   ): void {
     console.log('set caret for paragraph', p)
 
@@ -206,8 +232,8 @@ class Editor extends React.Component<EditorProps, EditorState> {
         p,
         paragraph,
         offset,
-        pageX,
-        pageY
+        clickX,
+        clickY
       )
       this.setState({ ...state, pindex: Number(pindex) })
     }
@@ -244,9 +270,9 @@ class Editor extends React.Component<EditorProps, EditorState> {
       console.log('offset:', offset)
 
       if (el.className === 'text-node') {
-        this.setCaretForSpan(el, offset)
+        this.setCaretForSpan(el, offset, event.clientX, event.clientY)
       } else if (el.className === 'paragraph') {
-        this.setCaretForParagraph(el, offset, event.pageX, event.pageY)
+        this.setCaretForParagraph(el, offset, event.clientX, event.clientY)
       }
     }
   }

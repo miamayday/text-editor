@@ -1,9 +1,17 @@
+/* Coords.ts
+   - helpful functions for computing caret coordinates
+*/
+
 export function calcLeft(left: number): number {
   return left - 2
 }
 
 export function calcTop(top: number): number {
   return top - 5
+}
+
+export function calcMiddle(x1: number, x2: number) {
+  return x1 + (x2 - x1) / 2
 }
 
 export function getRectFromRange(node: Node, offset: number): DOMRect {
