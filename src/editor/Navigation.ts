@@ -151,6 +151,8 @@ export function fixToNearestSpan(
 
   const caret: Type.Caret = { offset, x: 0, y: 0 }
 
+  // TODO: two for loops, maybe try one or some other solution
+
   const outOfBounds = checkBounds(p, arr, clickX, cont.left + 100)
   if (outOfBounds && offset > 0) {
     console.log('snap to start')
@@ -174,7 +176,7 @@ export function fixToNearestSpan(
       if (Coords.calcTop(y) <= clickY && clickY <= Coords.calcTop(y + 28)) {
         // on the same line
         console.log('reached same line')
-        caret.x = 100 - 2 // width
+        caret.x = 100 - 1 // width
         caret.y = Coords.calcTop(rect.top - cont.top + d.scrollTop)
 
         const mouse: Type.Mouse = { x: cont.left + 100, y }
@@ -199,8 +201,7 @@ export function fixToNearestSpan(
       const rect = Coords.getRectFromRange(span.childNodes[0], offset)
       const [x, y] = [rect.left, rect.top]
 
-      // TODO: when surpass y just stop
-      // though this hops over many due to offset constraint
+      // when surpass y just stop
       if (Coords.calcTop(y) > clickY) {
         console.log('already past y')
         break

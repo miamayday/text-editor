@@ -225,9 +225,10 @@ class Editor extends React.Component<EditorProps, EditorState> {
   ): void {
     console.log('set caret for paragraph', p)
 
-    const pindex = p.getAttribute('p-index')
-    if (pindex !== null) {
-      const paragraph = this.state.paragraphs[Number(pindex)]
+    const attrPindex = p.getAttribute('p-index')
+    if (attrPindex !== null) {
+      const pindex = Number(attrPindex)
+      const paragraph = this.state.paragraphs[pindex]
       const state = Navigation.fixToNearestSpan(
         p,
         paragraph,
@@ -235,7 +236,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
         clickX,
         clickY
       )
-      this.setState({ ...state, pindex: Number(pindex) })
+      this.setState({ ...state, pindex })
     }
   }
 
@@ -245,6 +246,11 @@ class Editor extends React.Component<EditorProps, EditorState> {
     event.preventDefault()
 
     //this.write(event.key)
+
+    switch (event.key) {
+      case 'ArrowRight':
+        break
+    }
   }
 
   handleClick(event: React.MouseEvent): void {

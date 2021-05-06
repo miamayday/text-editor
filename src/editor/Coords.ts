@@ -3,7 +3,7 @@
 */
 
 export function calcLeft(left: number): number {
-  return left - 2
+  return left
 }
 
 export function calcTop(top: number): number {

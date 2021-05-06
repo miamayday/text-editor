@@ -88,11 +88,11 @@
 }
 
 .caret {
-  width: 2px;
+  width: 1px;
   height: 28px;
   position: absolute;
   font-size: 20px;
-  background-color: rgb(139, 230, 210);
+  background-color: rgb(133, 89, 255);
 }
 
 .mouse {

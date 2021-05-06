@@ -1,2 +1,3 @@
 rich editing
 footer
+clicking on caret
