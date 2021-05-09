@@ -12,6 +12,8 @@ export type TextNode = {
 
 /* Editor */
 
+export type EditorProps = {}
+
 export type Caret = {
   offset: number
   x: number

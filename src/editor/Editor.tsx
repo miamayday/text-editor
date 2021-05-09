@@ -1,43 +1,15 @@
 import React from 'react'
-import type { TextNode, Style } from './Document'
-import { ReactComponent as BoldIcon } from './assets/bold.svg'
-import { ReactComponent as ItalicIcon } from './assets/italic.svg'
-import * as Coords from './editor/Coords'
-import * as Navigation from './editor/Navigation'
-
-import { SetterProps } from './editor/Types'
-
-type EditorProps = {}
-
-type Caret = {
-  offset: number
-  x: number
-  y: number
-}
-
-type Mouse = {
-  x: number
-  y: number
-}
-
-enum Direction {
-  Up = 1,
-  Down,
-  Left,
-  LeftAfterDelete,
-  Right,
-  RightAfterWrite
-}
-
-type EditorState = {
-  styleProps: React.CSSProperties
-  caret?: Caret
-  mouse?: Mouse // a pink square that acts a snapping guide
-  direction?: Direction
-  pindex?: number
-  sindex?: number
-  paragraphs: Array<Array<TextNode>>
-}
+import { ReactComponent as BoldIcon } from '../assets/bold.svg'
+import { ReactComponent as ItalicIcon } from '../assets/italic.svg'
+import {
+  Style,
+  TextNode,
+  EditorProps,
+  EditorState,
+  Direction,
+  SetterProps
+} from './Types'
+import * as Navigation from './Navigation'
 
 const bold: Style = { bold: true, italic: false }
 const italic: Style = { bold: false, italic: true }
@@ -85,6 +57,9 @@ class Editor extends React.Component<EditorProps, EditorState> {
   componentDidUpdate(): void {
     if (this.state.direction !== undefined) {
       switch (this.state.direction) {
+        case Direction.Up:
+          this.moveUp()
+          break
         case Direction.Right:
           this.moveRight()
           break
@@ -121,25 +96,44 @@ class Editor extends React.Component<EditorProps, EditorState> {
     }
   }
 
-  /* Coords */
+  /* Caret movers */
 
-  // moved to editor/Coords
+  moveUp(): void {
+    console.log('move up')
 
-  /* Movers */
+    const newState = Navigation.moveUp(this.state)
+    this.setState({ ...this.state, ...newState })
+  }
 
   moveRight(): void {
     console.log('move right')
 
     const newState = Navigation.moveRight(this.state)
-    if (newState !== null) {
-      this.setState({ ...this.state, ...newState })
-    }
+    this.setState({ ...this.state, ...newState })
   }
 
   moveLeft(): void {
     console.log('move left')
 
     const newState = Navigation.moveLeft(this.state)
+    this.setState({ ...this.state, ...newState })
+  }
+
+  /* Caret setters */
+
+  setCaretForSpan(props: SetterProps): void {
+    console.log('set caret for span', props.el)
+
+    const newState = Navigation.setCaretForSpan(this.state, props)
+    if (newState !== null) {
+      this.setState({ ...this.state, ...newState })
+    }
+  }
+
+  setCaretForParagraph(props: SetterProps): void {
+    console.log('set caret for paragraph', props.el)
+
+    const newState = Navigation.setCaretForParagraph(this.state, props)
     if (newState !== null) {
       this.setState({ ...this.state, ...newState })
     }
@@ -165,26 +159,6 @@ class Editor extends React.Component<EditorProps, EditorState> {
     }
   }
 
-  /* Caret setters */
-
-  setCaretForSpan(props: SetterProps): void {
-    console.log('set caret for span', props.el)
-
-    const newState = Navigation.setCaretForSpan(this.state, props)
-    if (newState !== null) {
-      this.setState({ ...this.state, ...newState })
-    }
-  }
-
-  setCaretForParagraph(props: SetterProps): void {
-    console.log('set caret for paragraph', props.el)
-
-    const newState = Navigation.setCaretForParagraph(this.state, props)
-    if (newState !== null) {
-      this.setState({ ...this.state, ...newState })
-    }
-  }
-
   /* Event handlers */
 
   handleKeyDown(event: React.KeyboardEvent): void {
@@ -193,6 +167,9 @@ class Editor extends React.Component<EditorProps, EditorState> {
     //this.write(event.key)
 
     switch (event.key) {
+      case 'ArrowUp':
+        this.setState({ direction: Direction.Up })
+        break
       case 'ArrowRight':
         this.setState({ direction: Direction.Right })
         break

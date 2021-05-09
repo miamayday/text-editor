@@ -1,5 +1,5 @@
 import { Component } from 'react'
-import Editor from './Editor'
+import Editor from './editor/Editor'
 import './App.css'
 
 type MyProps = {}
