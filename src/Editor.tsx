@@ -5,6 +5,8 @@ import { ReactComponent as ItalicIcon } from './assets/italic.svg'
 import * as Coords from './editor/Coords'
 import * as Navigation from './editor/Navigation'
 
+import { SetterProps } from './editor/Types'
+
 type EditorProps = {}
 
 type Caret = {
@@ -80,9 +82,12 @@ class Editor extends React.Component<EditorProps, EditorState> {
     this.handleKeyDown = this.handleKeyDown.bind(this)
   }
 
-  componentDidMount(): void {
+  componentDidUpdate(): void {
     if (this.state.direction !== undefined) {
       switch (this.state.direction) {
+        case Direction.Right:
+          this.shiftRight()
+          break
         case Direction.RightAfterWrite:
           this.shiftRight()
           break
@@ -121,6 +126,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
   /* Movers */
 
   shiftRight(): void {
+    console.log('shift right')
     if (this.state.caret && this.state.pindex && this.state.sindex) {
       const output = Navigation.incrementOffset(
         this.state.caret.offset,
@@ -165,78 +171,21 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
   /* Setters */
 
-  setCaretForSpan(
-    span: HTMLElement,
-    offset: number,
-    clickX: number,
-    clickY: number
-  ): void {
-    console.log('set caret for span', span)
+  setCaretForSpan(props: SetterProps): void {
+    console.log('set caret for span', props.el)
 
-    const attrPindex = span.getAttribute('p-index')
-    const attrSindex = span.getAttribute('s-index')
-    if (attrPindex !== null && attrSindex !== null) {
-      let pindex = Number(attrPindex)
-      let sindex = Number(attrSindex)
-
-      const [x, y] = Coords.getCoords(span, offset)
-      const caret = { offset, x, y }
-
-      const p = document.querySelectorAll('.paragraph')[pindex]
-      const arr = this.state.paragraphs[pindex]
-
-      const d = document.querySelectorAll('.document')[0]
-      const cont = d.getBoundingClientRect()
-
-      const outOfBounds = Navigation.checkBounds(
-        p,
-        arr,
-        clickX,
-        cont.left + 100
-      )
-
-      if (outOfBounds && offset > 0) {
-        console.log('snap to start')
-        let nextOffset = offset + 1
-        if (nextOffset > arr[sindex].text.length) {
-          nextOffset = 0
-          sindex++
-        }
-        const span = p.children[sindex]
-        const rect = Coords.getRectFromRange(span.childNodes[0], nextOffset)
-        caret.x = 100 - 2 // width
-        caret.y = Coords.calcTop(rect.top - cont.top + d.scrollTop)
-      }
-
-      this.setState({
-        caret,
-        mouse: undefined,
-        pindex,
-        sindex
-      })
+    const newState = Navigation.setCaretForSpan(this.state, props)
+    if (newState !== null) {
+      this.setState({ ...this.state, ...newState })
     }
   }
 
-  setCaretForParagraph(
-    p: HTMLElement,
-    offset: number,
-    clickX: number,
-    clickY: number
-  ): void {
-    console.log('set caret for paragraph', p)
+  setCaretForParagraph(props: SetterProps): void {
+    console.log('set caret for paragraph', props.el)
 
-    const attrPindex = p.getAttribute('p-index')
-    if (attrPindex !== null) {
-      const pindex = Number(attrPindex)
-      const paragraph = this.state.paragraphs[pindex]
-      const state = Navigation.fixToNearestSpan(
-        p,
-        paragraph,
-        offset,
-        clickX,
-        clickY
-      )
-      this.setState({ ...state, pindex })
+    const newState = Navigation.setCaretForParagraph(this.state, props)
+    if (newState !== null) {
+      this.setState({ ...this.state, ...newState })
     }
   }
 
@@ -249,6 +198,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
     switch (event.key) {
       case 'ArrowRight':
+        this.setState({ direction: Direction.Right })
         break
     }
   }
@@ -258,15 +208,17 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
     if (event.target instanceof HTMLElement) {
       const el = event.target
-      if (el.className !== 'text-node' && el.className !== 'paragraph') {
-        this.setState({
-          caret: undefined,
-          direction: undefined,
-          pindex: undefined,
-          sindex: undefined
-        })
-        return
-      }
+      if (el.className)
+        if (el.className !== 'text-node' && el.className !== 'paragraph') {
+          this.setState({
+            caret: undefined,
+            direction: undefined,
+            pindex: undefined,
+            sindex: undefined
+          })
+          console.log('undefined')
+          return
+        }
 
       const offset = window.getSelection()?.focusOffset
       if (offset === undefined) {
@@ -275,10 +227,17 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
       console.log('offset:', offset)
 
+      const props: SetterProps = {
+        el,
+        offset,
+        x: event.clientX,
+        y: event.clientY
+      }
+
       if (el.className === 'text-node') {
-        this.setCaretForSpan(el, offset, event.clientX, event.clientY)
+        this.setCaretForSpan(props)
       } else if (el.className === 'paragraph') {
-        this.setCaretForParagraph(el, offset, event.clientX, event.clientY)
+        this.setCaretForParagraph(props)
       }
     }
   }

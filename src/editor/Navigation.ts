@@ -5,6 +5,7 @@
 import { TextNode } from '../Document'
 import * as Coords from './Coords'
 import * as Type from './Types'
+import { EditorState, SetterProps } from './Types'
 
 export function incrementOffset(
   initialOffset: number,
@@ -175,7 +176,6 @@ export function fixToNearestSpan(
       // remember calcTop, spans are not the right height!
       if (Coords.calcTop(y) <= clickY && clickY <= Coords.calcTop(y + 28)) {
         // on the same line
-        console.log('reached same line')
         caret.x = 100 - 1 // width
         caret.y = Coords.calcTop(rect.top - cont.top + d.scrollTop)
 
@@ -235,4 +235,74 @@ export function fixToNearestSpan(
 
   const mouse: Type.Mouse = { x: bestX, y: bestY }
   return { caret, mouse, sindex: bestSindex }
+}
+
+/* Movers */
+
+function shiftRight() {}
+
+/* Setters */
+
+export function setCaretForSpan(
+  editor: EditorState,
+  props: SetterProps
+): Object | null {
+  const attrPindex = props.el.getAttribute('p-index')
+  const attrSindex = props.el.getAttribute('s-index')
+  if (attrPindex !== null && attrSindex !== null) {
+    let pindex = Number(attrPindex)
+    let sindex = Number(attrSindex)
+
+    const [x, y] = Coords.getCoords(props.el, props.offset)
+    const caret = { offset: props.offset, x, y }
+
+    const p = document.querySelectorAll('.paragraph')[pindex]
+    const arr = editor.paragraphs[pindex]
+
+    const d = document.querySelectorAll('.document')[0]
+    const cont = d.getBoundingClientRect()
+
+    const outOfBounds = checkBounds(p, arr, props.x, cont.left + 100)
+
+    if (outOfBounds && props.offset > 0) {
+      console.log('snap to start')
+      let nextOffset = props.offset + 1
+      if (nextOffset > arr[sindex].text.length) {
+        nextOffset = 0
+        sindex++
+      }
+      const span = p.children[sindex]
+      const rect = Coords.getRectFromRange(span.childNodes[0], nextOffset)
+      caret.x = 100 - 2 // width
+      caret.y = Coords.calcTop(rect.top - cont.top + d.scrollTop)
+    }
+
+    return {
+      caret,
+      mouse: undefined,
+      pindex,
+      sindex
+    }
+  }
+  return null
+}
+
+export function setCaretForParagraph(
+  editor: EditorState,
+  props: SetterProps
+): Object | null {
+  const attrPindex = props.el.getAttribute('p-index')
+  if (attrPindex !== null) {
+    const pindex = Number(attrPindex)
+    const paragraph = editor.paragraphs[pindex]
+    const state = fixToNearestSpan(
+      props.el,
+      paragraph,
+      props.offset,
+      props.x,
+      props.y
+    )
+    return { ...state, pindex }
+  }
+  return null
 }
