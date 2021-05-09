@@ -7,7 +7,7 @@ import * as Coords from './Coords'
 import * as Type from './Types'
 import { EditorState, SetterProps } from './Types'
 
-export function incrementOffset(
+function incrementOffset(
   initialOffset: number,
   initialPindex: number,
   initialSindex: number,
@@ -35,6 +35,46 @@ export function incrementOffset(
 
   // reach the end of the document
   if (pindex >= paragraphs.length) {
+    // do nuthin!
+    return null
+  }
+
+  return { offset, pindex, sindex }
+}
+
+function decrementOffset(
+  initialOffset: number,
+  initialPindex: number,
+  initialSindex: number,
+  paragraphs: Array<Array<TextNode>>
+): {
+  offset: number
+  pindex: number
+  sindex: number
+} | null {
+  let offset = initialOffset - 1
+  let pindex = initialPindex
+  let sindex = initialSindex
+
+  // go to previous span
+  if (offset < 0) {
+    sindex--
+    if (sindex >= 0) {
+      offset = paragraphs[pindex][sindex].text.length
+    }
+  }
+
+  // go to previous paragraph
+  if (sindex < 0) {
+    pindex--
+    if (pindex >= 0) {
+      sindex = paragraphs[pindex].length - 1
+      offset = paragraphs[pindex][sindex].text.length
+    }
+  }
+
+  // reach the start of the document
+  if (pindex < 0) {
     // do nuthin!
     return null
   }
@@ -176,7 +216,7 @@ export function fixToNearestSpan(
       // remember calcTop, spans are not the right height!
       if (Coords.calcTop(y) <= clickY && clickY <= Coords.calcTop(y + 28)) {
         // on the same line
-        caret.x = 100 - 1 // width
+        caret.x = 100
         caret.y = Coords.calcTop(rect.top - cont.top + d.scrollTop)
 
         const mouse: Type.Mouse = { x: cont.left + 100, y }
@@ -239,7 +279,125 @@ export function fixToNearestSpan(
 
 /* Movers */
 
-function shiftRight() {}
+export function moveRight(editor: EditorState): Object | null {
+  if (
+    editor.caret === undefined ||
+    editor.pindex === undefined ||
+    editor.sindex === undefined
+  ) {
+    return null
+  }
+
+  const output = incrementOffset(
+    editor.caret.offset,
+    editor.pindex,
+    editor.sindex,
+    editor.paragraphs
+  )
+
+  if (output === null) {
+    return null
+  }
+
+  const { offset, pindex, sindex } = output
+  const p = <HTMLElement>document.querySelectorAll('.paragraph')[pindex]
+
+  // empty paragraph
+  if (editor.paragraphs[pindex][sindex].text.length === 0) {
+    const caret = {
+      offset,
+      x: 100,
+      y: p.offsetTop
+    }
+    return { caret, pindex, sindex, direction: undefined }
+  }
+
+  const span = p.children[sindex]
+  const [x, y] = Coords.getCoords(span, offset)
+
+  if (pindex === editor.pindex) {
+    const oldSpan = p.children[editor.sindex]
+    const oldCoords = Coords.getCoords(oldSpan, editor.caret.offset)
+
+    if (editor.caret.x === 100) {
+      const caret = { offset, x, y }
+      return { caret, pindex, sindex, direction: undefined }
+    }
+
+    if (oldCoords[1] !== y) {
+      // next line
+      const caret = {
+        offset: offset - 1, // same offset must repeat for endline and startline
+        x: 100,
+        y
+      }
+      return { caret, pindex, sindex, direction: undefined }
+    }
+  }
+
+  const caret = { offset, x, y }
+  return { caret, pindex, sindex, direction: undefined }
+}
+
+export function moveLeft(editor: EditorState) {
+  if (
+    editor.caret === undefined ||
+    editor.pindex === undefined ||
+    editor.sindex === undefined
+  ) {
+    return null
+  }
+
+  const output = decrementOffset(
+    editor.caret.offset,
+    editor.pindex,
+    editor.sindex,
+    editor.paragraphs
+  )
+
+  if (output === null) {
+    return null
+  }
+
+  const { offset, pindex, sindex } = output
+  const p = <HTMLElement>document.querySelectorAll('.paragraph')[pindex]
+
+  // empty paragraph
+  if (editor.paragraphs[pindex][sindex].text.length === 0) {
+    const caret = {
+      offset,
+      x: 100,
+      y: p.offsetTop
+    }
+    return { caret, pindex, sindex, direction: undefined }
+  }
+
+  const span = p.children[sindex]
+  const [x, y] = Coords.getCoords(span, offset)
+
+  if (pindex === editor.pindex) {
+    const oldSpan = p.children[editor.sindex]
+    const oldCoords = Coords.getCoords(oldSpan, editor.caret.offset)
+
+    if (editor.caret.x === 100) {
+      const caret = { offset, x, y }
+      return { caret, pindex, sindex, direction: undefined }
+    }
+
+    if (oldCoords[1] !== y) {
+      // previous line
+      const caret = {
+        offset: offset + 1, // same offset must repeat for endline and startline
+        x: 100,
+        y: editor.caret.y
+      }
+      return { caret, pindex, sindex, direction: undefined }
+    }
+  }
+
+  const caret = { offset, x, y }
+  return { caret, pindex, sindex, direction: undefined }
+}
 
 /* Setters */
 
@@ -273,7 +431,7 @@ export function setCaretForSpan(
       }
       const span = p.children[sindex]
       const rect = Coords.getRectFromRange(span.childNodes[0], nextOffset)
-      caret.x = 100 - 2 // width
+      caret.x = 100
       caret.y = Coords.calcTop(rect.top - cont.top + d.scrollTop)
     }
 

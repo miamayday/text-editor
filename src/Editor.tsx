@@ -86,10 +86,12 @@ class Editor extends React.Component<EditorProps, EditorState> {
     if (this.state.direction !== undefined) {
       switch (this.state.direction) {
         case Direction.Right:
-          this.shiftRight()
+          this.moveRight()
           break
         case Direction.RightAfterWrite:
-          this.shiftRight()
+          break
+        case Direction.Left:
+          this.moveLeft()
           break
       }
     }
@@ -125,27 +127,21 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
   /* Movers */
 
-  shiftRight(): void {
-    console.log('shift right')
-    if (this.state.caret && this.state.pindex && this.state.sindex) {
-      const output = Navigation.incrementOffset(
-        this.state.caret.offset,
-        this.state.pindex,
-        this.state.sindex,
-        this.state.paragraphs
-      )
+  moveRight(): void {
+    console.log('move right')
 
-      if (output === null) {
-        return
-      }
+    const newState = Navigation.moveRight(this.state)
+    if (newState !== null) {
+      this.setState({ ...this.state, ...newState })
+    }
+  }
 
-      const { offset, pindex, sindex } = output
-      const span = document.querySelectorAll('.paragraph')[pindex].children[
-        sindex
-      ]
-      const [x, y] = Coords.getCoords(span, offset)
-      const caret = { offset, x, y }
-      this.setState({ caret, pindex, sindex, direction: undefined })
+  moveLeft(): void {
+    console.log('move left')
+
+    const newState = Navigation.moveLeft(this.state)
+    if (newState !== null) {
+      this.setState({ ...this.state, ...newState })
     }
   }
 
@@ -169,7 +165,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
     }
   }
 
-  /* Setters */
+  /* Caret setters */
 
   setCaretForSpan(props: SetterProps): void {
     console.log('set caret for span', props.el)
@@ -199,6 +195,9 @@ class Editor extends React.Component<EditorProps, EditorState> {
     switch (event.key) {
       case 'ArrowRight':
         this.setState({ direction: Direction.Right })
+        break
+      case 'ArrowLeft':
+        this.setState({ direction: Direction.Left })
         break
     }
   }
