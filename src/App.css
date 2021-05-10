@@ -19,6 +19,12 @@
   outline: none;
 }
 
+/* Status */
+
+.status {
+  color: rgb(168, 176, 211);
+}
+
 /* Toolbar */
 
 .toolbar {

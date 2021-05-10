@@ -257,8 +257,8 @@ export function fixToNearestSpan(
         caret.y = Coords.calcTop(rect.top - cont.top + d.scrollTop)
       }
     } else if (node.text.length === 0) {
-      // is there such a case?
-      console.log('empty node')
+      // happens with empty paragraphs
+      console.log('empty paragraph')
       const x = cont.left + 100 // margin
       const y = p.offsetTop + cont.top + d.scrollTop + 4 // (28 - 20) / 2
       const diff = Math.sqrt(Math.pow(clickX - x, 2) + Math.pow(clickY - y, 2))
@@ -269,6 +269,7 @@ export function fixToNearestSpan(
         bestSindex = 0
         caret.x = 100
         caret.y = p.offsetTop
+        caret.offset = 0
       }
     }
   }
@@ -408,34 +409,97 @@ export function moveUp(editor: EditorState): Object {
     return { direction: undefined }
   }
 
-  let offset = editor.caret.offset
+  const caret = { ...editor.caret }
+
   let pindex = editor.pindex
   let sindex = editor.sindex
 
+  // TODO: retain memory of original caret x, so when jumping
+  // blank lines try to get to the original pos
   // TODO: retain memory of curr span length
 
-  /*while (true) {
+  let p = document.querySelectorAll('.paragraph')[pindex] as HTMLElement
+  let span = p.children[sindex]
+
+  // seek y
+  while (true) {
+    const output = decrementOffset(
+      caret.offset,
+      pindex,
+      sindex,
+      editor.paragraphs
+    )
+
+    if (output === null) {
+      return { direction: undefined }
+    }
+
+    if (output.pindex !== pindex) {
+      // new paragraph
+      pindex = output.pindex
+      sindex = output.sindex
+      p = document.querySelectorAll('.paragraph')[pindex] as HTMLElement
+      span = p.children[sindex]
+
+      if (editor.paragraphs[pindex][sindex].text.length === 0) {
+        // empty paragraph
+        caret.offset = 0
+        caret.x = 100
+        caret.y = p.offsetTop
+        return { caret, pindex, sindex, direction: undefined }
+      }
+    } else if (output.sindex !== sindex) {
+      // new span
+      sindex = output.sindex
+      span = p.children[sindex]
+    }
+
+    caret.offset = output.offset
+    const [x, y] = Coords.getCoords(span, caret.offset)
+    if (y < editor.caret.y) {
+      caret.x = x
+      caret.y = y
+      break
+    }
+  }
+
+  let offset = caret.offset
+  let bestDiff = Math.abs(editor.caret.x - caret.x)
+  let bestSindex = sindex
+
+  // seek x
+  while (true) {
     const output = decrementOffset(offset, pindex, sindex, editor.paragraphs)
     if (output === null) {
       return { direction: undefined }
-    } else {
-      offset = output.offset
-      pindex = output.pindex
-      sindex = output.sindex
     }
 
-    const span = document.querySelectorAll('.paragraph')[pindex].children[
-      sindex
-    ]
-    const [x, y] = Coords.getCoords(span, offset)
-    if (y < editor.caret.y) {
+    if (output.sindex !== sindex) {
+      // new span
+      sindex = output.sindex
+      span = p.children[sindex]
+    }
+
+    offset = output.offset
+    let [x, y] = Coords.getCoords(span, offset)
+
+    // line start / document start
+    if (y !== caret.y || offset === 0) {
+      x = 100
+    }
+
+    const diff = Math.abs(editor.caret.x - x)
+    if (diff < bestDiff) {
+      caret.offset = offset
+      caret.x = x
+      bestDiff = diff
+      bestSindex = sindex
+    } else {
       break
     }
-  }*/
+  }
 
-  console.log('offset:', offset)
-
-  return { direction: undefined }
+  return { caret, pindex, sindex: bestSindex, direction: undefined }
 }
 
 /* Setters */

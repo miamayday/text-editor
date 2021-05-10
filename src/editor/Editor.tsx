@@ -201,8 +201,6 @@ class Editor extends React.Component<EditorProps, EditorState> {
         return
       }
 
-      console.log('offset:', offset)
-
       const props: SetterProps = {
         el,
         offset,
@@ -233,6 +231,9 @@ class Editor extends React.Component<EditorProps, EditorState> {
         <div className="toolbar">
           <BoldIcon className="toolbar-icon active" />
           <ItalicIcon className="toolbar-icon" />
+          <span className="status">
+            offset: {this.state.caret && this.state.caret.offset}
+          </span>
         </div>
         <div
           className="document"
