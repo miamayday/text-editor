@@ -58,6 +58,8 @@ export interface MoverProps {
   pindex: number
   sindex: number
   length: (pindex: number, sindex: number) => number
+  spanCount: (pindex: number) => number
+  pCount: number
 }
 
 export interface MoveState {

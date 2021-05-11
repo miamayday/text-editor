@@ -3,14 +3,7 @@
 */
 
 import * as Coords from './Coords'
-import {
-  TextNode,
-  Caret,
-  Mouse,
-  EditorState,
-  SetterProps,
-  MoveState
-} from './Types'
+import { TextNode } from './Types'
 
 function binOffset(
   span: Element,

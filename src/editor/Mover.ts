@@ -5,7 +5,9 @@ export function incrementOffset(
   initialOffset: number,
   initialPindex: number,
   initialSindex: number,
-  paragraphs: Array<Array<TextNode>>
+  length: (pindex: number, sindex: number) => number,
+  spanCount: (pindex: number) => number,
+  pCount: number
 ): {
   offset: number
   pindex: number
@@ -15,7 +17,7 @@ export function incrementOffset(
   let pindex = initialPindex
   let sindex = initialSindex
 
-  if (offset <= paragraphs[pindex][sindex].text.length) {
+  if (offset <= length(pindex, sindex)) {
     return { offset, pindex, sindex }
   } else {
     // go to next span
@@ -23,7 +25,7 @@ export function incrementOffset(
     sindex++
   }
 
-  if (sindex < paragraphs[pindex].length) {
+  if (sindex < spanCount(pindex)) {
     return { offset, pindex, sindex }
   } else {
     // go to next paragraph
@@ -31,7 +33,7 @@ export function incrementOffset(
     sindex = 0
   }
 
-  if (pindex < paragraphs.length) {
+  if (pindex < pCount) {
     return { offset, pindex, sindex }
   } else {
     // reach end of document
@@ -43,7 +45,8 @@ export function decrementOffset(
   initialOffset: number,
   initialPindex: number,
   initialSindex: number,
-  paragraphs: Array<Array<TextNode>>
+  length: (pindex: number, sindex: number) => number,
+  spanCount: (pindex: number) => number
 ): {
   offset: number
   pindex: number
@@ -61,7 +64,7 @@ export function decrementOffset(
   }
 
   if (sindex >= 0) {
-    offset = paragraphs[pindex][sindex].text.length - 1
+    offset = length(pindex, sindex) - 1
     return { offset, pindex, sindex }
   } else {
     // go to previous paragraph
@@ -69,8 +72,8 @@ export function decrementOffset(
   }
 
   if (pindex >= 0) {
-    sindex = paragraphs[pindex].length - 1
-    offset = paragraphs[pindex][sindex].text.length
+    sindex = spanCount(pindex) - 1
+    offset = length(pindex, sindex)
     return { offset, pindex, sindex }
   } else {
     // reach start of document
@@ -78,20 +81,14 @@ export function decrementOffset(
   }
 }
 
-export function moveRight(editor: EditorState): Object {
-  if (
-    editor.caret === undefined ||
-    editor.pindex === undefined ||
-    editor.sindex === undefined
-  ) {
-    return { direction: undefined }
-  }
-
+export function moveRight(props: MoverProps): Object {
   const output = incrementOffset(
-    editor.caret.offset,
-    editor.pindex,
-    editor.sindex,
-    editor.paragraphs
+    props.caret.offset,
+    props.pindex,
+    props.sindex,
+    props.length,
+    props.spanCount,
+    props.pCount
   )
 
   if (output === null) {
@@ -102,7 +99,7 @@ export function moveRight(editor: EditorState): Object {
   const p = document.querySelectorAll('.paragraph')[pindex] as HTMLElement
 
   // empty paragraph
-  if (editor.paragraphs[pindex][sindex].text.length === 0) {
+  if (props.length(pindex, sindex) === 0) {
     const caret = {
       offset,
       x: 100,
@@ -114,11 +111,11 @@ export function moveRight(editor: EditorState): Object {
   const span = p.children[sindex]
   const [x, y] = Coords.getCoords(span, offset)
 
-  if (pindex === editor.pindex) {
-    const oldSpan = p.children[editor.sindex]
-    const oldCoords = Coords.getCoords(oldSpan, editor.caret.offset)
+  if (pindex === props.pindex) {
+    const oldSpan = p.children[props.sindex]
+    const oldCoords = Coords.getCoords(oldSpan, props.caret.offset)
 
-    if (editor.caret.x === 100) {
+    if (props.caret.x === 100) {
       const caret = { offset, x, y }
       return { caret, pindex, sindex, direction: undefined }
     }
@@ -138,20 +135,13 @@ export function moveRight(editor: EditorState): Object {
   return { caret, pindex, sindex, direction: undefined }
 }
 
-export function moveLeft(editor: EditorState): Object {
-  if (
-    editor.caret === undefined ||
-    editor.pindex === undefined ||
-    editor.sindex === undefined
-  ) {
-    return { direction: undefined }
-  }
-
+export function moveLeft(props: MoverProps): Object {
   const output = decrementOffset(
-    editor.caret.offset,
-    editor.pindex,
-    editor.sindex,
-    editor.paragraphs
+    props.caret.offset,
+    props.pindex,
+    props.sindex,
+    props.length,
+    props.spanCount
   )
 
   if (output === null) {
@@ -162,7 +152,7 @@ export function moveLeft(editor: EditorState): Object {
   const p = document.querySelectorAll('.paragraph')[pindex] as HTMLElement
 
   // empty paragraph
-  if (editor.paragraphs[pindex][sindex].text.length === 0) {
+  if (props.length(pindex, sindex) === 0) {
     const caret = {
       offset,
       x: 100,
@@ -174,11 +164,11 @@ export function moveLeft(editor: EditorState): Object {
   const span = p.children[sindex]
   const [x, y] = Coords.getCoords(span, offset)
 
-  if (pindex === editor.pindex) {
-    const oldSpan = p.children[editor.sindex]
-    const oldCoords = Coords.getCoords(oldSpan, editor.caret.offset)
+  if (pindex === props.pindex) {
+    const oldSpan = p.children[props.sindex]
+    const oldCoords = Coords.getCoords(oldSpan, props.caret.offset)
 
-    if (editor.caret.x === 100) {
+    if (props.caret.x === 100) {
       const caret = { offset, x, y }
       return { caret, pindex, sindex, direction: undefined }
     }
@@ -188,7 +178,7 @@ export function moveLeft(editor: EditorState): Object {
       const caret = {
         offset: offset + 1, // same offset must repeat for endline and startline
         x: 100,
-        y: editor.caret.y
+        y: props.caret.y
       }
       return { caret, pindex, sindex, direction: undefined }
     }
@@ -198,15 +188,7 @@ export function moveLeft(editor: EditorState): Object {
   return { caret, pindex, sindex, direction: undefined }
 }
 
-export function moveUp(props: EditorState): Object {
-  if (
-    props.caret === undefined ||
-    props.pindex === undefined ||
-    props.sindex === undefined
-  ) {
-    return { direction: undefined }
-  }
-
+export function moveUp(props: MoverProps): Object {
   const caret = { ...props.caret }
   let pindex = props.pindex
   let sindex = props.sindex
@@ -215,7 +197,7 @@ export function moveUp(props: EditorState): Object {
   let span = p.children[sindex]
 
   // not empty paragraph
-  if (props.paragraphs[pindex][sindex].text.length !== 0) {
+  if (props.length(pindex, sindex) !== 0) {
     const realCoords = Coords.getCoords(span, caret.offset)
     if (realCoords[1] !== props.caret.y) {
       // coords have been manipulated
@@ -234,7 +216,8 @@ export function moveUp(props: EditorState): Object {
       caret.offset,
       pindex,
       sindex,
-      props.paragraphs
+      props.length,
+      props.spanCount
     )
 
     if (output === null) {
@@ -246,7 +229,7 @@ export function moveUp(props: EditorState): Object {
       p = document.querySelectorAll('.paragraph')[output.pindex] as HTMLElement
       span = p.children[output.sindex]
 
-      if (props.paragraphs[output.pindex][output.sindex].text.length === 0) {
+      if (props.length(output.pindex, output.sindex) === 0) {
         // empty paragraph
         caret.offset = 0
         caret.x = 100
@@ -289,7 +272,8 @@ export function moveUp(props: EditorState): Object {
       caret.offset,
       pindex,
       sindex,
-      props.paragraphs
+      props.length,
+      props.spanCount
     )
 
     // document start
@@ -331,15 +315,7 @@ export function moveUp(props: EditorState): Object {
   return { caret, pindex, sindex, direction: undefined }
 }
 
-export function moveDown(props: EditorState): Object {
-  if (
-    props.caret === undefined ||
-    props.pindex === undefined ||
-    props.sindex === undefined
-  ) {
-    return { direction: undefined }
-  }
-
+export function moveDown(props: MoverProps): Object {
   const caret = { ...props.caret }
   let pindex = props.pindex
   let sindex = props.sindex
@@ -354,7 +330,9 @@ export function moveDown(props: EditorState): Object {
       caret.offset,
       pindex,
       sindex,
-      props.paragraphs
+      props.length,
+      props.spanCount,
+      props.pCount
     )
 
     if (output === null) {
@@ -366,7 +344,7 @@ export function moveDown(props: EditorState): Object {
       p = document.querySelectorAll('.paragraph')[output.pindex] as HTMLElement
       span = p.children[output.sindex]
 
-      if (props.paragraphs[output.pindex][output.sindex].text.length === 0) {
+      if (props.length(output.pindex, output.sindex) === 0) {
         // empty paragraph
         caret.offset = 0
         caret.x = 100
@@ -407,7 +385,9 @@ export function moveDown(props: EditorState): Object {
       caret.offset,
       pindex,
       sindex,
-      props.paragraphs
+      props.length,
+      props.spanCount,
+      props.pCount
     )
 
     // document end
