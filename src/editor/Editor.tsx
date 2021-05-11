@@ -10,7 +10,6 @@ import {
   SetterProps,
   MoverProps
 } from './Types'
-import * as Navigation from './Navigation'
 import * as CaretSetter from './Setter'
 import * as CaretMover from './Mover'
 
@@ -60,22 +59,6 @@ class Editor extends React.Component<EditorProps, EditorState> {
   componentDidUpdate(): void {
     if (this.state.direction !== undefined) {
       this.moveCaret()
-      /*switch (this.state.direction) {
-        case Direction.Up:
-          this.moveUp()
-          break
-        case Direction.Right:
-          this.moveRight()
-          break
-        case Direction.RightAfterWrite:
-          break
-        case Direction.Down:
-          this.moveDown()
-          break
-        case Direction.Left:
-          this.moveLeft()
-          break
-      }*/
     }
   }
 
@@ -148,6 +131,8 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
     this.setState({ ...this.state, ...state })
   }
+
+  /* Caret setting */
 
   setCaretForSpan(props: SetterProps): void {
     console.log('set caret for span', props.el)

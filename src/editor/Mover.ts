@@ -1,5 +1,5 @@
 import * as Coords from './Coords'
-import { TextNode, EditorState, MoverProps } from './Types'
+import { MoverProps } from './Types'
 
 export function incrementOffset(
   initialOffset: number,
@@ -136,6 +136,34 @@ export function moveRight(props: MoverProps): Object {
 }
 
 export function moveLeft(props: MoverProps): Object {
+  // not empty paragraph
+  if (props.length(props.pindex, props.sindex) !== 0) {
+    const p = document.querySelectorAll('.paragraph')[
+      props.pindex
+    ] as HTMLElement
+    const span = p.children[props.sindex]
+    const realCoords = Coords.getCoords(span, props.caret.offset)
+    if (realCoords[1] !== props.caret.y) {
+      // coords have been manipulated
+      // meaning we're at the start of a line
+      // because start offset == prev end offset
+
+      // now fix to end of prev line
+      const caret = {
+        offset: props.caret.offset,
+        x: realCoords[0],
+        y: realCoords[1]
+      }
+
+      return {
+        caret,
+        pindex: props.pindex,
+        sindex: props.sindex,
+        direction: undefined
+      }
+    }
+  }
+
   const output = decrementOffset(
     props.caret.offset,
     props.pindex,
