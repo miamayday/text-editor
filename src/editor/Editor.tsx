@@ -7,9 +7,12 @@ import {
   EditorProps,
   EditorState,
   Direction,
-  SetterProps
+  SetterProps,
+  MoverProps
 } from './Types'
 import * as Navigation from './Navigation'
+import * as CaretSetter from './Setter'
+import * as CaretMover from './Mover'
 
 const bold: Style = { bold: true, italic: false }
 const italic: Style = { bold: false, italic: true }
@@ -65,6 +68,9 @@ class Editor extends React.Component<EditorProps, EditorState> {
           break
         case Direction.RightAfterWrite:
           break
+        case Direction.Down:
+          this.moveDown()
+          break
         case Direction.Left:
           this.moveLeft()
           break
@@ -98,24 +104,59 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
   /* Caret movers */
 
-  moveUp(): void {
-    console.log('move up')
+  /*moveCaret(): void {
+    if (
+      this.state.caret === undefined ||
+      this.state.pindex === undefined ||
+      this.state.sindex === undefined
+    ) {
+      return
+    }
 
-    const newState = Navigation.moveUp(this.state)
+    const props: MoverProps = {
+      caret: this.state.caret,
+      pindex: this.state.pindex,
+      sindex: this.state.sindex,
+      getParagraphLength: (pindex: number, sindex: number) => {
+        return this.state.paragraphs[pindex][sindex].text.length
+      }
+    }
+
+    switch (this.state.direction) {
+      case Direction.Up:
+        Navigation.moveUp
+        break
+      case Direction.Right:
+        this.moveRight()
+        break
+      case Direction.RightAfterWrite:
+        break
+      case Direction.Down:
+        this.moveDown()
+        break
+      case Direction.Left:
+        this.moveLeft()
+        break
+    }
+  }*/
+
+  moveUp(): void {
+    const newState = CaretMover.moveUp(this.state)
     this.setState({ ...this.state, ...newState })
   }
 
   moveRight(): void {
-    console.log('move right')
+    const newState = CaretMover.moveRight(this.state)
+    this.setState({ ...this.state, ...newState })
+  }
 
-    const newState = Navigation.moveRight(this.state)
+  moveDown(): void {
+    const newState = CaretMover.moveDown(this.state)
     this.setState({ ...this.state, ...newState })
   }
 
   moveLeft(): void {
-    console.log('move left')
-
-    const newState = Navigation.moveLeft(this.state)
+    const newState = CaretMover.moveLeft(this.state)
     this.setState({ ...this.state, ...newState })
   }
 
@@ -124,7 +165,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
   setCaretForSpan(props: SetterProps): void {
     console.log('set caret for span', props.el)
 
-    const newState = Navigation.setCaretForSpan(this.state, props)
+    const newState = CaretSetter.setCaretForSpan(this.state, props)
     if (newState !== null) {
       this.setState({ ...this.state, ...newState })
     }
@@ -133,7 +174,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
   setCaretForParagraph(props: SetterProps): void {
     console.log('set caret for paragraph', props.el)
 
-    const newState = Navigation.setCaretForParagraph(this.state, props)
+    const newState = CaretSetter.setCaretForParagraph(this.state, props)
     if (newState !== null) {
       this.setState({ ...this.state, ...newState })
     }
@@ -172,6 +213,9 @@ class Editor extends React.Component<EditorProps, EditorState> {
         break
       case 'ArrowRight':
         this.setState({ direction: Direction.Right })
+        break
+      case 'ArrowDown':
+        this.setState({ direction: Direction.Down })
         break
       case 'ArrowLeft':
         this.setState({ direction: Direction.Left })
