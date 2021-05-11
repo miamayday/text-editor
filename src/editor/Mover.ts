@@ -391,6 +391,9 @@ export function moveDown(props: MoverProps): Object {
 
     const [x, y] = Coords.getCoords(span, output.offset)
 
+    pindex = output.pindex
+    sindex = output.sindex
+
     if (y !== props.caret.y) {
       caret.x = 100
       caret.y = y
@@ -400,8 +403,6 @@ export function moveDown(props: MoverProps): Object {
     caret.offset = output.offset
     caret.x = x
     caret.y = y
-    pindex = output.pindex
-    sindex = output.sindex
   }
 
   let bestDiff = Math.abs(props.caret.x - caret.x)
@@ -451,7 +452,7 @@ export function moveDown(props: MoverProps): Object {
   return { caret, pindex, sindex, direction: undefined }
 }
 
-export function write(props: MoverProps): Object {
+export function moveAfterWrite(props: MoverProps): Object {
   const p = document.querySelectorAll('.paragraph')[props.pindex] as HTMLElement
   const span = p.children[props.sindex]
   const [x, y] = Coords.getCoords(span, props.caret.offset + 1)
@@ -464,11 +465,24 @@ export function write(props: MoverProps): Object {
   }
 }
 
-export function newLine(props: MoverProps): Object {
-  const p = document.querySelectorAll('.paragraph')[
-    props.pindex + 1
-  ] as HTMLElement
+export function moveAfterDelete(props: MoverProps): Object {
+  const p = document.querySelectorAll('.paragraph')[props.pindex] as HTMLElement
+  const span = p.children[props.sindex]
+  return { direction: undefined }
+}
+
+export function moveAfterNewLine(props: MoverProps): Object {
+  const pindex = props.pindex + 1
+  const sindex = 0
+
+  const p = document.querySelectorAll('.paragraph')[pindex] as HTMLElement
+  if (props.length(pindex, sindex) !== 0) {
+    const span = p.children[sindex]
+    const [x, y] = Coords.getCoords(span, 0)
+    const caret = { offset: 0, x, y }
+    return { caret, pindex, sindex, direction: undefined }
+  }
 
   const caret = { offset: 0, x: 100, y: p.offsetTop }
-  return { caret, pindex: props.pindex + 1, sindex: 0, direction: undefined }
+  return { caret, pindex, sindex, direction: undefined }
 }

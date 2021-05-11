@@ -29,9 +29,9 @@ export enum Direction {
   Up = 1,
   Down,
   Left,
-  LeftAfterDelete,
   Right,
-  RightAfterWrite,
+  Write,
+  Delete,
   NewLine
 }
 

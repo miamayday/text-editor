@@ -118,17 +118,20 @@ class Editor extends React.Component<EditorProps, EditorState> {
       case Direction.Right:
         state = CaretMover.moveRight(props)
         break
-      case Direction.RightAfterWrite:
-        state = CaretMover.write(props)
-        break
       case Direction.Down:
         state = CaretMover.moveDown(props)
         break
       case Direction.Left:
         state = CaretMover.moveLeft(props)
         break
+      case Direction.Write:
+        state = CaretMover.moveAfterWrite(props)
+        break
+      case Direction.Delete:
+        state = CaretMover.moveAfterDelete(props)
+        break
       case Direction.NewLine:
-        state = CaretMover.newLine(props)
+        state = CaretMover.moveAfterNewLine(props)
         break
     }
 
@@ -169,7 +172,54 @@ class Editor extends React.Component<EditorProps, EditorState> {
       ].join('')
       const paragraphs = this.state.paragraphs
       paragraphs[this.state.pindex][this.state.sindex].text = text
-      this.setState({ paragraphs, direction: Direction.RightAfterWrite })
+      this.setState({ paragraphs, direction: Direction.Write })
+    }
+  }
+
+  delete(): void {
+    if (
+      this.state.caret !== undefined &&
+      this.state.pindex !== undefined &&
+      this.state.sindex !== undefined
+    ) {
+      // start of document
+      if (
+        this.state.caret.offset === 0 &&
+        this.state.sindex === 0 &&
+        this.state.pindex === 0
+      ) {
+        return
+      }
+
+      const paragraphs = this.state.paragraphs
+
+      // join with prev paragraph
+      if (this.state.caret.offset === 0 && this.state.sindex === 0) {
+      }
+
+      const node = this.state.paragraphs[this.state.pindex][this.state.sindex]
+      const text = [
+        node.text.slice(0, this.state.caret.offset - 1),
+        node.text.slice(this.state.caret.offset)
+      ].join('')
+
+      if (text.length === 0) {
+        if (this.state.pindex === 0 && this.state.sindex === 0) {
+          // document start
+          return
+        } else if (this.state.pindex !== 0 && this.state.sindex === 0) {
+          // delete paragraph
+          paragraphs.splice(this.state.pindex, 1)
+        } else {
+          // delete node
+          paragraphs[this.state.pindex].splice(this.state.sindex, 1)
+          // what happens to offset/pindex/sindex?
+        }
+      } else {
+        paragraphs[this.state.pindex][this.state.sindex].text = text
+      }
+
+      this.setState({ paragraphs, direction: Direction.Delete })
     }
   }
 
@@ -207,8 +257,6 @@ class Editor extends React.Component<EditorProps, EditorState> {
     }
   }
 
-  delete(): void {}
-
   /* Event handlers */
 
   handleKeyDown(event: React.KeyboardEvent): void {
@@ -230,7 +278,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
       case 'Enter':
         this.newLine()
         break
-      case 'BackSpace':
+      case 'Backspace':
         this.delete()
         break
       default:
@@ -292,6 +340,12 @@ class Editor extends React.Component<EditorProps, EditorState> {
           <ItalicIcon className="toolbar-icon" />
           <span className="status">
             offset: {this.state.caret && this.state.caret.offset}
+          </span>
+          <span className="status">
+            pindex: {this.state.pindex && this.state.pindex}
+          </span>
+          <span className="status">
+            sindex: {this.state.sindex && this.state.sindex}
           </span>
         </div>
         <div
