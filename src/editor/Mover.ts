@@ -1,5 +1,5 @@
 import * as Coords from './Coords'
-import { TextNode, EditorState } from './Types'
+import { TextNode, EditorState, MoverProps } from './Types'
 
 export function incrementOffset(
   initialOffset: number,
@@ -198,29 +198,26 @@ export function moveLeft(editor: EditorState): Object {
   return { caret, pindex, sindex, direction: undefined }
 }
 
-export function moveUp(editor: EditorState): Object {
+export function moveUp(props: EditorState): Object {
   if (
-    editor.caret === undefined ||
-    editor.pindex === undefined ||
-    editor.sindex === undefined
+    props.caret === undefined ||
+    props.pindex === undefined ||
+    props.sindex === undefined
   ) {
     return { direction: undefined }
   }
 
-  // TOTALLY REVAMP THIS
-  // caret.x === 100 might not always work? some more dynamic solution...
-
-  const caret = { ...editor.caret }
-  let pindex = editor.pindex
-  let sindex = editor.sindex
+  const caret = { ...props.caret }
+  let pindex = props.pindex
+  let sindex = props.sindex
 
   let p = document.querySelectorAll('.paragraph')[pindex] as HTMLElement
   let span = p.children[sindex]
 
   // not empty paragraph
-  if (editor.paragraphs[pindex][sindex].text.length !== 0) {
+  if (props.paragraphs[pindex][sindex].text.length !== 0) {
     const realCoords = Coords.getCoords(span, caret.offset)
-    if (realCoords[1] !== editor.caret.y) {
+    if (realCoords[1] !== props.caret.y) {
       // coords have been manipulated
       // meaning we're at the start of a line
       // because start offset == prev end offset
@@ -230,25 +227,26 @@ export function moveUp(editor: EditorState): Object {
     }
   }
 
-  // seek values
-  let off = caret.offset
-  let pi = pindex
-  let si = sindex
-
   /* Seek y */
 
-  while (caret.y === editor.caret.y) {
-    const output = decrementOffset(off, pi, si, editor.paragraphs)
+  while (caret.y === props.caret.y) {
+    const output = decrementOffset(
+      caret.offset,
+      pindex,
+      sindex,
+      props.paragraphs
+    )
+
     if (output === null) {
       return { direction: undefined }
     }
 
-    if (output.pindex !== pi) {
+    if (output.pindex !== pindex) {
       // new paragraph
       p = document.querySelectorAll('.paragraph')[output.pindex] as HTMLElement
       span = p.children[output.sindex]
 
-      if (editor.paragraphs[output.pindex][output.sindex].text.length === 0) {
+      if (props.paragraphs[output.pindex][output.sindex].text.length === 0) {
         // empty paragraph
         caret.offset = 0
         caret.x = 100
@@ -260,31 +258,29 @@ export function moveUp(editor: EditorState): Object {
           direction: undefined
         }
       }
-    } else if (output.sindex !== si) {
+    } else if (output.sindex !== sindex) {
       // new span
       span = p.children[output.sindex]
     }
 
     const [x, y] = Coords.getCoords(span, output.offset)
-    if (y !== editor.caret.y) {
-      caret.offset = output.offset
-      caret.x = x
-      caret.y = y
-      pindex = output.pindex
-      sindex = output.sindex
+
+    caret.offset = output.offset
+    caret.x = x
+    caret.y = y
+    pindex = output.pindex
+    sindex = output.sindex
+
+    if (y !== props.caret.y) {
       break
     }
-
-    off = output.offset
-    pi = output.pindex
-    si = output.sindex
   }
 
   // TODO: retain memory of original caret x, so when jumping
   // blank lines try to get to the original pos
   // TODO: retain memory of curr span length
 
-  let bestDiff = Math.abs(editor.caret.x - caret.x)
+  let bestDiff = Math.abs(props.caret.x - caret.x)
 
   /* Seek x */
 
@@ -293,7 +289,7 @@ export function moveUp(editor: EditorState): Object {
       caret.offset,
       pindex,
       sindex,
-      editor.paragraphs
+      props.paragraphs
     )
 
     // document start
@@ -318,7 +314,7 @@ export function moveUp(editor: EditorState): Object {
       break
     }
 
-    const diff = Math.abs(editor.caret.x - x)
+    const diff = Math.abs(props.caret.x - x)
     if (diff <= bestDiff) {
       caret.offset = output.offset
       caret.x = x
@@ -335,34 +331,30 @@ export function moveUp(editor: EditorState): Object {
   return { caret, pindex, sindex, direction: undefined }
 }
 
-export function moveDown(editor: EditorState): Object {
+export function moveDown(props: EditorState): Object {
   if (
-    editor.caret === undefined ||
-    editor.pindex === undefined ||
-    editor.sindex === undefined
+    props.caret === undefined ||
+    props.pindex === undefined ||
+    props.sindex === undefined
   ) {
     return { direction: undefined }
   }
 
-  const caret = { ...editor.caret }
-
-  let pindex = editor.pindex
-  let sindex = editor.sindex
-
-  // TODO: retain memory of original caret x, so when jumping
-  // blank lines try to get to the original pos
-  // TODO: retain memory of curr span length
+  const caret = { ...props.caret }
+  let pindex = props.pindex
+  let sindex = props.sindex
 
   let p = document.querySelectorAll('.paragraph')[pindex] as HTMLElement
   let span = p.children[sindex]
 
-  // seek y
-  while (true) {
+  /* Seek y */
+
+  while (caret.y === props.caret.y) {
     const output = incrementOffset(
       caret.offset,
       pindex,
       sindex,
-      editor.paragraphs
+      props.paragraphs
     )
 
     if (output === null) {
@@ -374,7 +366,7 @@ export function moveDown(editor: EditorState): Object {
       p = document.querySelectorAll('.paragraph')[output.pindex] as HTMLElement
       span = p.children[output.sindex]
 
-      if (editor.paragraphs[output.pindex][output.sindex].text.length === 0) {
+      if (props.paragraphs[output.pindex][output.sindex].text.length === 0) {
         // empty paragraph
         caret.offset = 0
         caret.x = 100
@@ -392,31 +384,35 @@ export function moveDown(editor: EditorState): Object {
     }
 
     const [x, y] = Coords.getCoords(span, output.offset)
-    if (y !== editor.caret.y) {
+
+    if (y !== props.caret.y) {
       caret.x = 100
       caret.y = y
       break
-    } else {
-      caret.offset = output.offset
-      pindex = output.pindex
-      sindex = output.sindex
     }
+
+    caret.offset = output.offset
+    caret.x = x
+    caret.y = y
+    pindex = output.pindex
+    sindex = output.sindex
   }
 
-  let bestDiff = Math.abs(editor.caret.x - caret.x)
-  let bestSindex = sindex
+  let bestDiff = Math.abs(props.caret.x - caret.x)
 
-  // seek x
+  /* Seek x */
+
   while (true) {
     const output = incrementOffset(
       caret.offset,
       pindex,
       sindex,
-      editor.paragraphs
+      props.paragraphs
     )
 
+    // document end
     if (output === null) {
-      return { direction: undefined }
+      break
     }
 
     if (output.sindex !== sindex) {
@@ -424,19 +420,25 @@ export function moveDown(editor: EditorState): Object {
       span = p.children[output.sindex]
     }
 
-    const [x, y] = Coords.getCoords(span, output.offset)
+    let [x, y] = Coords.getCoords(span, output.offset)
 
-    const diff = Math.abs(editor.caret.x - x)
-    if (diff < bestDiff) {
+    if (y !== caret.y) {
+      break
+    }
+
+    const diff = Math.abs(props.caret.x - x)
+    if (diff <= bestDiff) {
       caret.offset = output.offset
       caret.x = x
-      bestDiff = diff
-      bestSindex = sindex
       sindex = output.sindex
+      if (diff === bestDiff) {
+        break
+      }
+      bestDiff = diff
     } else {
       break
     }
   }
 
-  return { caret, pindex, sindex: bestSindex, direction: undefined }
+  return { caret, pindex, sindex, direction: undefined }
 }

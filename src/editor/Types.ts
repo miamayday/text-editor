@@ -57,7 +57,7 @@ export interface MoverProps {
   caret: Caret
   pindex: number
   sindex: number
-  getParagraphLength: (pindex: number, sindex: number) => number
+  length: (pindex: number, sindex: number) => number
 }
 
 export interface MoveState {
