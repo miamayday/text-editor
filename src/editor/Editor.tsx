@@ -29,8 +29,7 @@ const n7: TextNode = { style: normal, text: 'This is the third paragraph.' }
 const n8: TextNode = { style: normal, text: '' }
 const n9: TextNode = {
   style: normal,
-  text:
-    'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus placerat eleifend iaculis. Morbi orci urna, tristique in auctor id, ultrices sed neque. Suspendisse eget neque orci. Cras sed tempor nulla. Sed congue arcu id suscipit viverra. Vestibulum sit amet commodo erat. Sed egestas blandit ex, eget suscipit diam semper non. Sed id sagittis purus. Aenean placerat sapien id ultrices congue. Morbi congue lorem sed felis molestie, id porta justo pellentesque.'
+  text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus placerat eleifend iaculis. Morbi orci urna, tristique in auctor id, ultrices sed neque. Suspendisse eget neque orci. Cras sed tempor nulla. Sed congue arcu id suscipit viverra. Vestibulum sit amet commodo erat. Sed egestas blandit ex, eget suscipit diam semper non. Sed id sagittis purus. Aenean placerat sapien id ultrices congue. Morbi congue lorem sed felis molestie, id porta justo pellentesque.'
 }
 
 const examples: Array<Array<TextNode>> = [
@@ -127,12 +126,13 @@ class Editor extends React.Component<EditorProps, EditorState> {
       case Direction.Left:
         state = CaretMover.moveLeft(props)
         break
+      case Direction.NewLine:
+        state = CaretMover.newLine(props)
+        break
     }
 
     this.setState({ ...this.state, ...state })
   }
-
-  /* Caret setting */
 
   setCaretForSpan(props: SetterProps): void {
     console.log('set caret for span', props.el)
@@ -152,7 +152,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
     }
   }
 
-  /* Typing */
+  /* Editing */
 
   write(key: string): void {
     if (
@@ -169,6 +169,40 @@ class Editor extends React.Component<EditorProps, EditorState> {
       const paragraphs = this.state.paragraphs
       paragraphs[this.state.pindex][this.state.sindex] = node
       this.setState({ direction: Direction.RightAfterWrite, paragraphs })
+    }
+  }
+
+  newLine(): void {
+    if (
+      this.state.caret !== undefined &&
+      this.state.pindex !== undefined &&
+      this.state.sindex !== undefined
+    ) {
+      const paragraph = this.state.paragraphs[this.state.pindex]
+      const node = paragraph[this.state.sindex]
+      const text = node.text
+      const head = text.slice(0, this.state.caret.offset)
+      const tail = text.slice(this.state.caret.offset)
+
+      // copy paragraph
+      const newParagraph: Array<TextNode> = []
+      for (let i = this.state.sindex; i < paragraph.length; i++) {
+        newParagraph.push(paragraph[i])
+      }
+
+      // copy node
+      const style: Style = { ...node.style }
+      const newNode: TextNode = { style, text: tail }
+      newParagraph[0] = newNode
+
+      paragraph[this.state.sindex].text = head
+      paragraph.length = this.state.sindex + 1
+
+      const paragraphs = this.state.paragraphs
+      paragraphs[this.state.pindex] = paragraph
+      paragraphs.splice(this.state.pindex + 1, 0, newParagraph)
+
+      this.setState({ paragraphs, direction: Direction.NewLine })
     }
   }
 
@@ -191,6 +225,9 @@ class Editor extends React.Component<EditorProps, EditorState> {
         break
       case 'ArrowLeft':
         this.setState({ direction: Direction.Left })
+        break
+      case 'Enter':
+        this.newLine()
         break
     }
   }

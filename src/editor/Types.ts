@@ -31,7 +31,8 @@ export enum Direction {
   Left,
   LeftAfterDelete,
   Right,
-  RightAfterWrite
+  RightAfterWrite,
+  NewLine
 }
 
 export type EditorState = {

@@ -2,4 +2,3 @@ rich editing
 footer
 clicking on caret
 scroll pushing when caret moves out of view
-change movers state management

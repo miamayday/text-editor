@@ -450,3 +450,12 @@ export function moveDown(props: MoverProps): Object {
 
   return { caret, pindex, sindex, direction: undefined }
 }
+
+export function newLine(props: MoverProps): Object {
+  const p = document.querySelectorAll('.paragraph')[
+    props.pindex + 1
+  ] as HTMLElement
+
+  const caret = { offset: 0, x: 100, y: p.offsetTop }
+  return { caret, pindex: props.pindex + 1, sindex: 0, direction: undefined }
+}
