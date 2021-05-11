@@ -451,6 +451,19 @@ export function moveDown(props: MoverProps): Object {
   return { caret, pindex, sindex, direction: undefined }
 }
 
+export function write(props: MoverProps): Object {
+  const p = document.querySelectorAll('.paragraph')[props.pindex] as HTMLElement
+  const span = p.children[props.sindex]
+  const [x, y] = Coords.getCoords(span, props.caret.offset + 1)
+  const caret = { offset: props.caret.offset + 1, x, y }
+  return {
+    caret,
+    pindex: props.pindex,
+    sindex: props.sindex,
+    direction: undefined
+  }
+}
+
 export function newLine(props: MoverProps): Object {
   const p = document.querySelectorAll('.paragraph')[
     props.pindex + 1

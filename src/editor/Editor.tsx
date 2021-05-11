@@ -119,6 +119,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
         state = CaretMover.moveRight(props)
         break
       case Direction.RightAfterWrite:
+        state = CaretMover.write(props)
         break
       case Direction.Down:
         state = CaretMover.moveDown(props)
@@ -161,14 +162,14 @@ class Editor extends React.Component<EditorProps, EditorState> {
       this.state.sindex !== undefined
     ) {
       const node = this.state.paragraphs[this.state.pindex][this.state.sindex]
-      node.text = [
+      const text = [
         node.text.slice(0, this.state.caret.offset),
         key,
         node.text.slice(this.state.caret.offset)
       ].join('')
       const paragraphs = this.state.paragraphs
-      paragraphs[this.state.pindex][this.state.sindex] = node
-      this.setState({ direction: Direction.RightAfterWrite, paragraphs })
+      paragraphs[this.state.pindex][this.state.sindex].text = text
+      this.setState({ paragraphs, direction: Direction.RightAfterWrite })
     }
   }
 
@@ -206,12 +207,12 @@ class Editor extends React.Component<EditorProps, EditorState> {
     }
   }
 
+  delete(): void {}
+
   /* Event handlers */
 
   handleKeyDown(event: React.KeyboardEvent): void {
     event.preventDefault()
-
-    //this.write(event.key)
 
     switch (event.key) {
       case 'ArrowUp':
@@ -229,6 +230,11 @@ class Editor extends React.Component<EditorProps, EditorState> {
       case 'Enter':
         this.newLine()
         break
+      case 'BackSpace':
+        this.delete()
+        break
+      default:
+        this.write(event.key)
     }
   }
 
