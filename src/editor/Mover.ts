@@ -467,8 +467,25 @@ export function moveAfterWrite(props: MoverProps): Object {
 
 export function moveAfterDelete(props: MoverProps): Object {
   const p = document.querySelectorAll('.paragraph')[props.pindex] as HTMLElement
+  if (props.length(props.pindex, props.sindex) === 0) {
+    const caret = { offset: 0, x: 100, y: p.offsetTop }
+    return {
+      caret,
+      pindex: props.pindex,
+      sindex: props.sindex,
+      direction: undefined
+    }
+  }
+
   const span = p.children[props.sindex]
-  return { direction: undefined }
+  const [x, y] = Coords.getCoords(span, props.caret.offset)
+  const caret = { offset: props.caret.offset, x, y }
+  return {
+    caret,
+    pindex: props.pindex,
+    sindex: props.sindex,
+    direction: undefined
+  }
 }
 
 export function moveAfterNewLine(props: MoverProps): Object {

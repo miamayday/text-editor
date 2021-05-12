@@ -2,3 +2,5 @@ rich editing
 footer
 clicking on caret
 scroll pushing when caret moves out of view
+immutability with this.state?
+offset between two spans...

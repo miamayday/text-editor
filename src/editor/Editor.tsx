@@ -25,7 +25,7 @@ const n5: TextNode = {
   text: ' test. elements. This is the se co   nd line of the first paragraph.'
 }
 const n6: TextNode = { style: normal, text: '' }
-const n7: TextNode = { style: normal, text: 'This is the third paragraph.' }
+const n7: TextNode = { style: italic, text: 'This is the third paragraph.' }
 const n8: TextNode = { style: normal, text: '' }
 const n9: TextNode = {
   style: normal,
@@ -34,7 +34,7 @@ const n9: TextNode = {
 
 const examples: Array<Array<TextNode>> = [
   [n1, n2, n3, n4, n5],
-  [n6],
+  //[n6],
   [n7],
   [n8],
   [n9]
@@ -182,20 +182,89 @@ class Editor extends React.Component<EditorProps, EditorState> {
       this.state.pindex !== undefined &&
       this.state.sindex !== undefined
     ) {
-      // start of document
-      if (
-        this.state.caret.offset === 0 &&
-        this.state.sindex === 0 &&
-        this.state.pindex === 0
-      ) {
+      const paragraphs = this.state.paragraphs
+
+      /* Combine paragraphs */
+
+      if (this.state.caret.offset === 0 && this.state.sindex === 0) {
+        // start of document, do nothing
+        if (this.state.pindex === 0) {
+          console.log('do nothing')
+          return
+        }
+
+        // start of paragraph
+
+        const left = paragraphs[this.state.pindex - 1]
+        const right = paragraphs[this.state.pindex]
+
+        const leftNode = left[left.length - 1]
+        const rightNode = right[0]
+
+        if (leftNode.text.length === 0) {
+          // left is empty: right dominates left
+          paragraphs[this.state.pindex - 1] = right
+          paragraphs.splice(this.state.pindex, 1)
+          this.setState({
+            caret: { ...this.state.caret, offset: 0 },
+            pindex: this.state.pindex - 1,
+            sindex: this.state.sindex,
+            paragraphs,
+            direction: Direction.Delete
+          })
+          console.log('right dominates left')
+          return
+        } else if (rightNode.text.length === 0) {
+          // right is empty: left dominates right
+          paragraphs.splice(this.state.pindex, 1)
+          this.setState({
+            caret: { ...this.state.caret, offset: leftNode.text.length },
+            pindex: this.state.pindex - 1,
+            sindex: left.length - 1,
+            paragraphs,
+            direction: Direction.Delete
+          })
+          console.log('left dominates right')
+          return
+        }
+
+        const leftSpanCount = left.length
+        const leftNodeLength = leftNode.text.length
+
+        // combine spans as they are of the same style
+        if (leftNode.style === rightNode.style) {
+          leftNode.text = leftNode.text.concat(rightNode.text)
+          if (right.length > 1) {
+            right.splice(0, 1)
+            left.push(...right)
+          }
+          paragraphs.splice(this.state.pindex, 1)
+          this.setState({
+            caret: { ...this.state.caret, offset: leftNodeLength },
+            pindex: this.state.pindex - 1,
+            sindex: leftSpanCount - 1,
+            paragraphs,
+            direction: Direction.Delete
+          })
+          console.log('combine spans')
+          return
+        }
+
+        // combine paragraphs only
+        left.push(...right)
+        paragraphs.splice(this.state.pindex, 1)
+        this.setState({
+          caret: { ...this.state.caret, offset: 0 },
+          pindex: this.state.pindex - 1,
+          sindex: leftSpanCount,
+          paragraphs,
+          direction: Direction.Delete
+        })
+        console.log('combine paragraphs')
         return
       }
 
-      const paragraphs = this.state.paragraphs
-
-      // join with prev paragraph
-      if (this.state.caret.offset === 0 && this.state.sindex === 0) {
-      }
+      /* Normal delete */
 
       const node = this.state.paragraphs[this.state.pindex][this.state.sindex]
       const text = [
@@ -204,22 +273,44 @@ class Editor extends React.Component<EditorProps, EditorState> {
       ].join('')
 
       if (text.length === 0) {
-        if (this.state.pindex === 0 && this.state.sindex === 0) {
-          // document start
+        if (this.state.sindex === 0) {
+          // stop at beginning of paragraph
+          this.setState({
+            caret: { ...this.state.caret, offset: 0 },
+            pindex: this.state.pindex,
+            sindex: 0,
+            paragraphs,
+            direction: Direction.Delete
+          })
+          console.log('stop')
           return
-        } else if (this.state.pindex !== 0 && this.state.sindex === 0) {
-          // delete paragraph
-          paragraphs.splice(this.state.pindex, 1)
         } else {
           // delete node
           paragraphs[this.state.pindex].splice(this.state.sindex, 1)
-          // what happens to offset/pindex/sindex?
+          this.setState({
+            caret: {
+              ...this.state.caret,
+              offset:
+                paragraphs[this.state.pindex][this.state.sindex - 1].text.length
+            },
+            pindex: this.state.pindex,
+            sindex: this.state.sindex - 1,
+            paragraphs,
+            direction: Direction.Delete
+          })
+          console.log('delete node')
+          return
         }
-      } else {
-        paragraphs[this.state.pindex][this.state.sindex].text = text
       }
 
-      this.setState({ paragraphs, direction: Direction.Delete })
+      paragraphs[this.state.pindex][this.state.sindex].text = text
+      this.setState({
+        caret: { ...this.state.caret, offset: this.state.caret.offset - 1 },
+        pindex: this.state.pindex,
+        sindex: this.state.sindex,
+        paragraphs,
+        direction: Direction.Delete
+      })
     }
   }
 
@@ -260,7 +351,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
   /* Event handlers */
 
   handleKeyDown(event: React.KeyboardEvent): void {
-    event.preventDefault()
+    //event.preventDefault()
 
     switch (event.key) {
       case 'ArrowUp':
@@ -310,7 +401,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
       const props: SetterProps = {
         el,
-        offset,
+        offset, // TODO: what about between two spans?
         x: event.clientX,
         y: event.clientY
       }
