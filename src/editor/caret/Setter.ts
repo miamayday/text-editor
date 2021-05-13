@@ -1,6 +1,6 @@
 import * as Coords from './Coords'
-import { TextNode, Caret, Mouse, EditorState, SetterProps } from './Types'
-import { incrementOffset, decrementOffset } from './Navigation'
+import { TextNode, Caret, Mouse, EditorState, SetterProps } from '../Types'
+import { incrementOffset, decrementOffset } from './Helper'
 
 function fixToNearestSpan(
   p: HTMLElement,

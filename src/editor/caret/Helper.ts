@@ -1,5 +1,5 @@
 import * as Coords from './Coords'
-import { TextNode } from './Types'
+import { TextNode } from '../Types'
 
 export function incrementOffset(
   initialOffset: number,

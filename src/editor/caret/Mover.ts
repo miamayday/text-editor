@@ -1,6 +1,6 @@
 import * as Coords from './Coords'
-import { MoverProps } from './Types'
-import { incrementOffset, decrementOffset } from './Navigation'
+import { MoverProps } from '../Types'
+import { incrementOffset, decrementOffset } from './Helper'
 
 export function moveRight(props: MoverProps): Object {
   const output = incrementOffset(

@@ -10,8 +10,8 @@ import {
   SetterProps,
   MoverProps
 } from './Types'
-import * as CaretSetter from './Setter'
-import * as CaretMover from './Mover'
+import * as CaretSetter from './caret/Setter'
+import * as CaretMover from './caret/Mover'
 
 const bold: Style = { bold: true, italic: false }
 const italic: Style = { bold: false, italic: true }
