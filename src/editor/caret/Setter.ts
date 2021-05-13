@@ -1,3 +1,7 @@
+/**
+ * Caret setting after clicking somewhere on the editor
+ */
+
 import * as Coords from './Coords'
 import { TextNode, Caret, Mouse, EditorState, SetterProps } from '../Types'
 import { incrementOffset, decrementOffset } from './Helper'
@@ -150,7 +154,6 @@ export function setCaretForSpan(
     const cont = d.getBoundingClientRect()
 
     const outOfBounds = checkBounds(p, arr, props.x, cont.left + 100)
-
     if (outOfBounds && props.offset > 0) {
       console.log('snap to start')
       let nextOffset = props.offset + 1
@@ -162,6 +165,13 @@ export function setCaretForSpan(
       const rect = Coords.getRectFromRange(span.childNodes[0], nextOffset)
       caret.x = 100
       caret.y = Coords.calcTop(rect.top - cont.top + d.scrollTop)
+    }
+
+    // fix offset
+    if (props.offset === 0 && sindex > 0) {
+      console.log('fix offset')
+      caret.offset = props.length(pindex, sindex - 1)
+      sindex--
     }
 
     return {

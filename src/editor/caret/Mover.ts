@@ -1,8 +1,13 @@
+/**
+ * Caret movement with arrow keys
+ */
+
 import * as Coords from './Coords'
 import { MoverProps } from '../Types'
 import { incrementOffset, decrementOffset } from './Helper'
 
 export function moveRight(props: MoverProps): Object {
+  console.log('move right')
   const output = incrementOffset(
     props.caret.offset,
     props.pindex,
@@ -57,6 +62,7 @@ export function moveRight(props: MoverProps): Object {
 }
 
 export function moveLeft(props: MoverProps): Object {
+  console.log('move left')
   // not empty paragraph
   if (props.length(props.pindex, props.sindex) !== 0) {
     const p = document.querySelectorAll('.paragraph')[
@@ -138,6 +144,7 @@ export function moveLeft(props: MoverProps): Object {
 }
 
 export function moveUp(props: MoverProps): Object {
+  console.log('move up')
   const caret = { ...props.caret }
   let pindex = props.pindex
   let sindex = props.sindex
@@ -271,6 +278,7 @@ export function moveUp(props: MoverProps): Object {
 }
 
 export function moveDown(props: MoverProps): Object {
+  console.log('move down')
   const caret = { ...props.caret }
   let pindex = props.pindex
   let sindex = props.sindex

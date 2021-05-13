@@ -21,7 +21,7 @@ export function incrementOffset(
     return { offset, pindex, sindex }
   } else {
     // go to next span
-    offset = 0
+    offset = 1
     sindex++
   }
 
@@ -56,7 +56,7 @@ export function decrementOffset(
   let pindex = initialPindex
   let sindex = initialSindex
 
-  if (offset >= 0) {
+  if (offset >= 1 || (offset >= 0 && sindex === 0)) {
     return { offset, pindex, sindex }
   } else {
     // go to previous span
@@ -64,7 +64,7 @@ export function decrementOffset(
   }
 
   if (sindex >= 0) {
-    offset = length(pindex, sindex) - 1
+    offset = length(pindex, sindex)
     return { offset, pindex, sindex }
   } else {
     // go to previous paragraph

@@ -35,11 +35,19 @@ export enum Direction {
   NewLine
 }
 
+export enum Command {
+  Write,
+  Delete,
+  NewLine
+}
+
 export type EditorState = {
   styleProps: React.CSSProperties
   caret?: Caret
   mouse?: Mouse // a pink square that acts a snapping guide
-  direction?: Direction
+  direction?: Direction // caret guide
+  command?: Command // writer guide
+  key?: string // input key
   pindex?: number
   sindex?: number
   paragraphs: Array<Array<TextNode>>

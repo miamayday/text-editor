@@ -7,11 +7,14 @@ import {
   EditorProps,
   EditorState,
   Direction,
+  Command,
   SetterProps,
-  MoverProps
+  MoverProps,
+  WriterProps
 } from './Types'
 import * as CaretSetter from './caret/Setter'
 import * as CaretMover from './caret/Mover'
+import * as Writer from './Writer'
 
 const bold: Style = { bold: true, italic: false }
 const italic: Style = { bold: false, italic: true }
@@ -61,6 +64,8 @@ class Editor extends React.Component<EditorProps, EditorState> {
   componentDidUpdate(): void {
     if (this.state.direction !== undefined) {
       this.moveCaret()
+    } else if (this.state.command !== undefined) {
+      this.executeCommand()
     }
   }
 
@@ -160,6 +165,35 @@ class Editor extends React.Component<EditorProps, EditorState> {
   }
 
   /* Editing */
+
+  executeCommand(): void {
+    if (
+      this.state.caret === undefined ||
+      this.state.pindex === undefined ||
+      this.state.sindex === undefined
+    ) {
+      return
+    }
+
+    const props: WriterProps = {
+      caret: this.state.caret,
+      pindex: this.state.pindex,
+      sindex: this.state.sindex,
+      paragraphs: this.state.paragraphs
+    }
+
+    switch (this.state.command) {
+      case Command.Write:
+        break
+      case Command.Delete:
+        break
+      case Command.NewLine:
+        this.setState(Writer.newLine(props))
+        break
+    }
+
+    this.setState({ command: undefined })
+  }
 
   write(key: string): void {
     if (
@@ -323,31 +357,15 @@ class Editor extends React.Component<EditorProps, EditorState> {
       this.state.pindex !== undefined &&
       this.state.sindex !== undefined
     ) {
-      const paragraph = this.state.paragraphs[this.state.pindex]
-      const node = paragraph[this.state.sindex]
-      const text = node.text
-      const head = text.slice(0, this.state.caret.offset)
-      const tail = text.slice(this.state.caret.offset)
-
-      // copy paragraph
-      const newParagraph: Array<TextNode> = []
-      for (let i = this.state.sindex; i < paragraph.length; i++) {
-        newParagraph.push(paragraph[i])
+      const props: WriterProps = {
+        caret: this.state.caret,
+        pindex: this.state.pindex,
+        sindex: this.state.sindex,
+        paragraphs: this.state.paragraphs
       }
 
-      // copy node
-      const style: Style = { ...node.style }
-      const newNode: TextNode = { style, text: tail }
-      newParagraph[0] = newNode
-
-      paragraph[this.state.sindex].text = head
-      paragraph.length = this.state.sindex + 1
-
-      const paragraphs = this.state.paragraphs
-      paragraphs[this.state.pindex] = paragraph
-      paragraphs.splice(this.state.pindex + 1, 0, newParagraph)
-
-      this.setState({ paragraphs, direction: Direction.NewLine })
+      const state = Writer.newLine(props)
+      this.setState(state)
     }
   }
 
@@ -370,13 +388,13 @@ class Editor extends React.Component<EditorProps, EditorState> {
         this.setState({ direction: Direction.Left })
         break
       case 'Enter':
-        this.newLine()
+        this.setState({ command: Command.NewLine })
         break
       case 'Backspace':
-        this.delete()
+        this.setState({ command: Command.Delete })
         break
       default:
-        this.write(event.key)
+        this.setState({ command: Command.Write, key: event.key })
     }
   }
 
