@@ -25,7 +25,10 @@ const n5: TextNode = {
   text: ' test. elements. This is the se co   nd line of the first paragraph.'
 }
 const n6: TextNode = { style: normal, text: '' }
-const n7: TextNode = { style: italic, text: 'This is the third paragraph.' }
+const n7: TextNode = {
+  style: italic,
+  text: 'This is another paragraph with text.'
+}
 const n8: TextNode = { style: normal, text: '' }
 const n9: TextNode = {
   style: normal,
@@ -351,7 +354,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
   /* Event handlers */
 
   handleKeyDown(event: React.KeyboardEvent): void {
-    //event.preventDefault()
+    event.preventDefault()
 
     switch (event.key) {
       case 'ArrowUp':
@@ -399,11 +402,20 @@ class Editor extends React.Component<EditorProps, EditorState> {
         return
       }
 
+      console.log('focusOffset:', offset)
+
       const props: SetterProps = {
         el,
-        offset, // TODO: what about between two spans?
+        offset, // TODO: what about between two spans? and empty paragraph?
         x: event.clientX,
-        y: event.clientY
+        y: event.clientY,
+        length: (pindex: number, sindex: number) => {
+          return this.state.paragraphs[pindex][sindex].text.length
+        },
+        spanCount: (pindex: number) => {
+          return this.state.paragraphs[pindex].length
+        },
+        pCount: this.state.paragraphs.length
       }
 
       if (el.className === 'text-node') {

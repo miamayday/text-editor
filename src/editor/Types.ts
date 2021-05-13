@@ -45,13 +45,16 @@ export type EditorState = {
   paragraphs: Array<Array<TextNode>>
 }
 
-/* Interfaces */
+/* Caret */
 
 export interface SetterProps {
   el: HTMLElement
   offset: number
   x: number
   y: number
+  length: (pindex: number, sindex: number) => number
+  spanCount: (pindex: number) => number
+  pCount: number
 }
 
 export interface MoverProps {
@@ -68,4 +71,13 @@ export interface MoveState {
   pindex: number
   sindex: number
   direction?: Direction
+}
+
+/* Writer */
+
+export interface WriterProps {
+  caret: Caret
+  pindex: number
+  sindex: number
+  paragraphs: Array<Array<TextNode>>
 }

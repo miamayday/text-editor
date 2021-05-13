@@ -4,3 +4,4 @@ clicking on caret
 scroll pushing when caret moves out of view
 immutability with this.state?
 offset between two spans...
+> instead of !== when dealing with 0s

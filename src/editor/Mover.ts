@@ -1,85 +1,6 @@
 import * as Coords from './Coords'
 import { MoverProps } from './Types'
-
-export function incrementOffset(
-  initialOffset: number,
-  initialPindex: number,
-  initialSindex: number,
-  length: (pindex: number, sindex: number) => number,
-  spanCount: (pindex: number) => number,
-  pCount: number
-): {
-  offset: number
-  pindex: number
-  sindex: number
-} | null {
-  let offset = initialOffset + 1
-  let pindex = initialPindex
-  let sindex = initialSindex
-
-  if (offset <= length(pindex, sindex)) {
-    return { offset, pindex, sindex }
-  } else {
-    // go to next span
-    offset = 0
-    sindex++
-  }
-
-  if (sindex < spanCount(pindex)) {
-    return { offset, pindex, sindex }
-  } else {
-    // go to next paragraph
-    pindex++
-    sindex = 0
-  }
-
-  if (pindex < pCount) {
-    return { offset, pindex, sindex }
-  } else {
-    // reach end of document
-    return null
-  }
-}
-
-export function decrementOffset(
-  initialOffset: number,
-  initialPindex: number,
-  initialSindex: number,
-  length: (pindex: number, sindex: number) => number,
-  spanCount: (pindex: number) => number
-): {
-  offset: number
-  pindex: number
-  sindex: number
-} | null {
-  let offset = initialOffset - 1
-  let pindex = initialPindex
-  let sindex = initialSindex
-
-  if (offset >= 0) {
-    return { offset, pindex, sindex }
-  } else {
-    // go to previous span
-    sindex--
-  }
-
-  if (sindex >= 0) {
-    offset = length(pindex, sindex) - 1
-    return { offset, pindex, sindex }
-  } else {
-    // go to previous paragraph
-    pindex--
-  }
-
-  if (pindex >= 0) {
-    sindex = spanCount(pindex) - 1
-    offset = length(pindex, sindex)
-    return { offset, pindex, sindex }
-  } else {
-    // reach start of document
-    return null
-  }
-}
+import { incrementOffset, decrementOffset } from './Navigation'
 
 export function moveRight(props: MoverProps): Object {
   const output = incrementOffset(
@@ -317,8 +238,9 @@ export function moveUp(props: MoverProps): Object {
       span = p.children[output.sindex]
     }
 
-    let [x, y] = Coords.getCoords(span, output.offset)
+    const [x, y] = Coords.getCoords(span, output.offset)
 
+    // line start
     if (y !== caret.y) {
       caret.offset = output.offset
       caret.x = 100
@@ -336,6 +258,11 @@ export function moveUp(props: MoverProps): Object {
       }
       bestDiff = diff
     } else {
+      break
+    }
+
+    if (output.offset === 0 && output.sindex === 0) {
+      console.log('break')
       break
     }
   }
