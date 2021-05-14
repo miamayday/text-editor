@@ -186,6 +186,10 @@ class Editor extends React.Component<EditorProps, EditorState> {
       case Command.Write:
         break
       case Command.Delete:
+        const state = Writer.Delete(props)
+        if (state !== null) {
+          this.setState({ ...this.state, ...state })
+        }
         break
       case Command.NewLine:
         this.setState(Writer.newLine(props))
@@ -210,162 +214,6 @@ class Editor extends React.Component<EditorProps, EditorState> {
       const paragraphs = this.state.paragraphs
       paragraphs[this.state.pindex][this.state.sindex].text = text
       this.setState({ paragraphs, direction: Direction.Write })
-    }
-  }
-
-  delete(): void {
-    if (
-      this.state.caret !== undefined &&
-      this.state.pindex !== undefined &&
-      this.state.sindex !== undefined
-    ) {
-      const paragraphs = this.state.paragraphs
-
-      /* Combine paragraphs */
-
-      if (this.state.caret.offset === 0 && this.state.sindex === 0) {
-        // start of document, do nothing
-        if (this.state.pindex === 0) {
-          console.log('do nothing')
-          return
-        }
-
-        // start of paragraph
-
-        const left = paragraphs[this.state.pindex - 1]
-        const right = paragraphs[this.state.pindex]
-
-        const leftNode = left[left.length - 1]
-        const rightNode = right[0]
-
-        if (leftNode.text.length === 0) {
-          // left is empty: right dominates left
-          paragraphs[this.state.pindex - 1] = right
-          paragraphs.splice(this.state.pindex, 1)
-          this.setState({
-            caret: { ...this.state.caret, offset: 0 },
-            pindex: this.state.pindex - 1,
-            sindex: this.state.sindex,
-            paragraphs,
-            direction: Direction.Delete
-          })
-          console.log('right dominates left')
-          return
-        } else if (rightNode.text.length === 0) {
-          // right is empty: left dominates right
-          paragraphs.splice(this.state.pindex, 1)
-          this.setState({
-            caret: { ...this.state.caret, offset: leftNode.text.length },
-            pindex: this.state.pindex - 1,
-            sindex: left.length - 1,
-            paragraphs,
-            direction: Direction.Delete
-          })
-          console.log('left dominates right')
-          return
-        }
-
-        const leftSpanCount = left.length
-        const leftNodeLength = leftNode.text.length
-
-        // combine spans as they are of the same style
-        if (leftNode.style === rightNode.style) {
-          leftNode.text = leftNode.text.concat(rightNode.text)
-          if (right.length > 1) {
-            right.splice(0, 1)
-            left.push(...right)
-          }
-          paragraphs.splice(this.state.pindex, 1)
-          this.setState({
-            caret: { ...this.state.caret, offset: leftNodeLength },
-            pindex: this.state.pindex - 1,
-            sindex: leftSpanCount - 1,
-            paragraphs,
-            direction: Direction.Delete
-          })
-          console.log('combine spans')
-          return
-        }
-
-        // combine paragraphs only
-        left.push(...right)
-        paragraphs.splice(this.state.pindex, 1)
-        this.setState({
-          caret: { ...this.state.caret, offset: 0 },
-          pindex: this.state.pindex - 1,
-          sindex: leftSpanCount,
-          paragraphs,
-          direction: Direction.Delete
-        })
-        console.log('combine paragraphs')
-        return
-      }
-
-      /* Normal delete */
-
-      const node = this.state.paragraphs[this.state.pindex][this.state.sindex]
-      const text = [
-        node.text.slice(0, this.state.caret.offset - 1),
-        node.text.slice(this.state.caret.offset)
-      ].join('')
-
-      if (text.length === 0) {
-        if (this.state.sindex === 0) {
-          // stop at beginning of paragraph
-          this.setState({
-            caret: { ...this.state.caret, offset: 0 },
-            pindex: this.state.pindex,
-            sindex: 0,
-            paragraphs,
-            direction: Direction.Delete
-          })
-          console.log('stop')
-          return
-        } else {
-          // delete node
-          paragraphs[this.state.pindex].splice(this.state.sindex, 1)
-          this.setState({
-            caret: {
-              ...this.state.caret,
-              offset:
-                paragraphs[this.state.pindex][this.state.sindex - 1].text.length
-            },
-            pindex: this.state.pindex,
-            sindex: this.state.sindex - 1,
-            paragraphs,
-            direction: Direction.Delete
-          })
-          console.log('delete node')
-          return
-        }
-      }
-
-      paragraphs[this.state.pindex][this.state.sindex].text = text
-      this.setState({
-        caret: { ...this.state.caret, offset: this.state.caret.offset - 1 },
-        pindex: this.state.pindex,
-        sindex: this.state.sindex,
-        paragraphs,
-        direction: Direction.Delete
-      })
-    }
-  }
-
-  newLine(): void {
-    if (
-      this.state.caret !== undefined &&
-      this.state.pindex !== undefined &&
-      this.state.sindex !== undefined
-    ) {
-      const props: WriterProps = {
-        caret: this.state.caret,
-        pindex: this.state.pindex,
-        sindex: this.state.sindex,
-        paragraphs: this.state.paragraphs
-      }
-
-      const state = Writer.newLine(props)
-      this.setState(state)
     }
   }
 

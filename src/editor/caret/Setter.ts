@@ -1,5 +1,5 @@
 /**
- * Caret setting after clicking somewhere on the editor
+ * Caret setting after clicking somewhere on the editor.
  */
 
 import * as Coords from './Coords'

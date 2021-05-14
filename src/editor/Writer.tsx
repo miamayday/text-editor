@@ -1,5 +1,122 @@
 import { WriterProps, TextNode, Style, Direction } from './Types'
 
+export function Delete(props: WriterProps): Object | null {
+  if (props.caret.offset === 0 && props.pindex === 0 && props.sindex === 0) {
+    // document start
+    return null
+  }
+
+  /* Paragraph deletion */
+
+  if (props.caret.offset === 0 && props.sindex === 0) {
+    // paragraph start
+    const left = props.paragraphs[props.pindex - 1]
+    const right = props.paragraphs[props.pindex]
+
+    const leftNode = left[left.length - 1]
+    const rightNode = right[0]
+
+    // left orig values
+    const textLength = leftNode.text.length
+    const spanCount = left.length
+
+    if (textLength === 0) {
+      // left is empty: right dominates left
+      props.paragraphs[props.pindex - 1] = right
+      props.paragraphs.splice(props.pindex, 1)
+      console.log('right dominates left')
+      return {
+        caret: { ...props.caret, offset: 0 },
+        pindex: props.pindex - 1,
+        sindex: props.sindex,
+        paragraphs: props.paragraphs,
+        direction: Direction.Delete
+      }
+    } else if (rightNode.text.length === 0) {
+      // right is empty: left dominates right
+      props.paragraphs.splice(props.pindex, 1)
+      console.log('left dominates right')
+      return {
+        caret: { ...props.caret, offset: textLength },
+        pindex: props.pindex - 1,
+        sindex: spanCount - 1,
+        paragraphs: props.paragraphs,
+        direction: Direction.Delete
+      }
+    }
+
+    // combine spans if they are of the same style
+    if (leftNode.style === rightNode.style) {
+      leftNode.text = leftNode.text.concat(rightNode.text)
+      if (right.length > 1) {
+        right.splice(0, 1)
+        left.push(...right)
+      }
+      props.paragraphs.splice(props.pindex, 1)
+      console.log('combine spans')
+      return {
+        caret: { ...props.caret, offset: textLength },
+        pindex: props.pindex - 1,
+        sindex: spanCount - 1,
+        paragraphs: props.paragraphs,
+        direction: Direction.Delete
+      }
+    }
+
+    // combine paragraphs only
+    left.push(...right)
+    props.paragraphs.splice(props.pindex, 1)
+    console.log('combine paragraphs')
+    return {
+      caret: { ...props.caret, offset: textLength },
+      pindex: props.pindex - 1,
+      sindex: spanCount - 1,
+      paragraphs: props.paragraphs,
+      direction: Direction.Delete
+    }
+  }
+
+  /* Span deletion */
+
+  const node = props.paragraphs[props.pindex][props.sindex]
+  const text = [
+    node.text.slice(0, props.caret.offset - 1),
+    node.text.slice(props.caret.offset)
+  ].join('')
+
+  if (text.length === 0 && props.sindex > 0) {
+    // delete node
+    props.paragraphs[props.pindex].splice(props.sindex, 1)
+    console.log('delete node')
+    return {
+      caret: {
+        ...props.caret,
+        offset: props.paragraphs[props.pindex][props.sindex - 1].text.length
+      },
+      pindex: props.pindex,
+      sindex: props.sindex - 1,
+      paragraphs: props.paragraphs,
+      direction: Direction.Delete
+    }
+  }
+
+  props.paragraphs[props.pindex][props.sindex].text = text
+  props.caret.offset--
+  if (props.caret.offset < 1 && props.sindex > 0) {
+    props.caret.offset =
+      props.paragraphs[props.pindex][props.sindex - 1].text.length
+    props.sindex--
+  }
+
+  return {
+    caret: props.caret,
+    pindex: props.pindex,
+    sindex: props.sindex,
+    paragraphs: props.paragraphs,
+    direction: Direction.Delete
+  }
+}
+
 export function newLine(props: WriterProps): {
   paragraphs: Array<Array<TextNode>>
   direction: Direction
