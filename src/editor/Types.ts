@@ -42,7 +42,7 @@ export enum Command {
 }
 
 export type EditorState = {
-  styleProps: React.CSSProperties
+  style: Style
   caret?: Caret
   mouse?: Mouse // a pink square that acts a snapping guide
   direction?: Direction // caret guide

@@ -145,6 +145,7 @@ export function moveLeft(props: MoverProps): Object {
 
 export function moveUp(props: MoverProps): Object {
   console.log('move up')
+
   const caret = { ...props.caret }
   let pindex = props.pindex
   let sindex = props.sindex
@@ -153,7 +154,8 @@ export function moveUp(props: MoverProps): Object {
   let span = p.children[sindex]
 
   // not empty paragraph
-  if (props.length(pindex, sindex) !== 0) {
+  if (props.length(pindex, sindex) > 0) {
+    console.log('check real coordinates')
     const realCoords = Coords.getCoords(span, caret.offset)
     if (realCoords[1] !== props.caret.y) {
       // coords have been manipulated
@@ -166,6 +168,8 @@ export function moveUp(props: MoverProps): Object {
   }
 
   /* Seek y */
+
+  console.log('seek y')
 
   while (caret.y === props.caret.y) {
     const output = decrementOffset(
@@ -222,6 +226,8 @@ export function moveUp(props: MoverProps): Object {
   let bestDiff = Math.abs(props.caret.x - caret.x)
 
   /* Seek x */
+
+  console.log('seek x')
 
   while (true) {
     const output = decrementOffset(

@@ -1,5 +1,30 @@
 import { WriterProps, TextNode, Style, Direction } from './Types'
 
+export function Write(
+  props: WriterProps,
+  key: string,
+  style: Style
+): {
+  paragraphs: Array<Array<TextNode>>
+  direction: Direction
+} {
+  const node = props.paragraphs[props.pindex][props.sindex]
+  const paragraphs = props.paragraphs
+  if (node.style.bold === style.bold && node.style.italic === style.italic) {
+    const text = [
+      node.text.slice(0, props.caret.offset),
+      key,
+      node.text.slice(props.caret.offset)
+    ].join('')
+    paragraphs[props.pindex][props.sindex].text = text
+  } else {
+    console.log('not the same')
+    // TODO
+  }
+
+  return { paragraphs, direction: Direction.Write }
+}
+
 export function Delete(props: WriterProps): Object | null {
   if (props.caret.offset === 0 && props.pindex === 0 && props.sindex === 0) {
     // document start
@@ -121,6 +146,8 @@ export function newLine(props: WriterProps): {
   paragraphs: Array<Array<TextNode>>
   direction: Direction
 } {
+  console.log('new line:', props)
+
   const paragraph = props.paragraphs[props.pindex]
   const node = paragraph[props.sindex]
   const text = node.text

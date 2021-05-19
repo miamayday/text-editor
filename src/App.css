@@ -49,37 +49,37 @@
   background: rgb(222, 228, 255);
 }
 
-.toolbar-icon.active:hover {
+/*.toolbar-icon.active:hover {
   background: rgb(212, 220, 255);
-}
+}*/
 
 .toolbar-icon:not(:first-child) {
   margin-left: 0;
 }
 
-.toolbar-icon:hover {
+/*.toolbar-icon:hover {
   background: rgb(228, 228, 228);
-}
+}*/
 
 .toolbar-icon path,
 .toolbar-icon g {
   fill: rgb(196, 196, 196);
 }
 
-.toolbar-icon:hover path,
+/*.toolbar-icon:hover path,
 .toolbar-icon:hover g {
   fill: rgb(160, 160, 160);
-}
+}*/
 
 .toolbar-icon.active path,
 .toolbar-icon.active g {
   fill: rgb(176, 181, 204);
 }
 
-.toolbar-icon.active:hover path,
+/*.toolbar-icon.active:hover path,
 .toolbar-icon.active:hover g {
   fill: rgb(143, 148, 172);
-}
+}*/
 
 /* Document */
 

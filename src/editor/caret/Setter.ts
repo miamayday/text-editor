@@ -4,7 +4,6 @@
 
 import * as Coords from './Coords'
 import { TextNode, Caret, Mouse, EditorState, SetterProps } from '../Types'
-import { incrementOffset, decrementOffset } from './Helper'
 
 function fixToNearestSpan(
   p: HTMLElement,
@@ -174,11 +173,14 @@ export function setCaretForSpan(
       sindex--
     }
 
+    const style = { ...arr[sindex].style }
+
     return {
       caret,
       mouse: undefined,
       pindex,
-      sindex
+      sindex,
+      style
     }
   }
   return null
@@ -199,7 +201,8 @@ export function setCaretForParagraph(
       props.x,
       props.y
     )
-    return { ...state, pindex }
+    const style = { ...paragraph[state.sindex].style }
+    return { ...state, pindex, style }
   }
   return null
 }

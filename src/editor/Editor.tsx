@@ -50,15 +50,17 @@ class Editor extends React.Component<EditorProps, EditorState> {
   constructor(props: EditorProps) {
     super(props)
     this.state = {
-      styleProps: {
-        fontStyle: 'normal',
-        fontWeight: 'normal'
+      style: {
+        bold: false,
+        italic: false
       },
       paragraphs: examples
     }
 
     this.handleClick = this.handleClick.bind(this)
     this.handleKeyDown = this.handleKeyDown.bind(this)
+    this.handleBoldClick = this.handleBoldClick.bind(this)
+    this.handleItalicClick = this.handleItalicClick.bind(this)
   }
 
   componentDidUpdate(): void {
@@ -72,12 +74,9 @@ class Editor extends React.Component<EditorProps, EditorState> {
   /* Stylers */
 
   nodeToCSSProps(style: Style): React.CSSProperties {
-    const props: React.CSSProperties = { ...this.state.styleProps }
-    if (style.bold) {
-      props.fontWeight = 'bold'
-    }
-    if (style.italic) {
-      props.fontStyle = 'italic'
+    const props: React.CSSProperties = {
+      fontWeight: style.bold ? 'bold' : 'normal',
+      fontStyle: style.italic ? 'italic' : 'normal'
     }
     return props
   }
@@ -184,6 +183,10 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
     switch (this.state.command) {
       case Command.Write:
+        console.log('write', this.state.key)
+        if (this.state.key) {
+          this.setState(Writer.Write(props, this.state.key, this.state.style))
+        }
         break
       case Command.Delete:
         const state = Writer.Delete(props)
@@ -197,24 +200,6 @@ class Editor extends React.Component<EditorProps, EditorState> {
     }
 
     this.setState({ command: undefined })
-  }
-
-  write(key: string): void {
-    if (
-      this.state.caret !== undefined &&
-      this.state.pindex !== undefined &&
-      this.state.sindex !== undefined
-    ) {
-      const node = this.state.paragraphs[this.state.pindex][this.state.sindex]
-      const text = [
-        node.text.slice(0, this.state.caret.offset),
-        key,
-        node.text.slice(this.state.caret.offset)
-      ].join('')
-      const paragraphs = this.state.paragraphs
-      paragraphs[this.state.pindex][this.state.sindex].text = text
-      this.setState({ paragraphs, direction: Direction.Write })
-    }
   }
 
   /* Event handlers */
@@ -292,9 +277,23 @@ class Editor extends React.Component<EditorProps, EditorState> {
     }
   }
 
+  handleBoldClick(event: React.MouseEvent): void {
+    event.preventDefault()
+    this.setState({
+      style: { ...this.state.style, bold: !this.state.style.bold }
+    })
+  }
+
+  handleItalicClick(event: React.MouseEvent): void {
+    event.preventDefault()
+    this.setState({
+      style: { ...this.state.style, italic: !this.state.style.italic }
+    })
+  }
+
   render() {
     return (
-      <div className="editor">
+      <div className="editor" onKeyDown={this.handleKeyDown} tabIndex={0}>
         {this.state.mouse && (
           <div
             className="mouse"
@@ -305,8 +304,18 @@ class Editor extends React.Component<EditorProps, EditorState> {
           ></div>
         )}
         <div className="toolbar">
-          <BoldIcon className="toolbar-icon active" />
-          <ItalicIcon className="toolbar-icon" />
+          <BoldIcon
+            className={
+              this.state.style.bold ? 'toolbar-icon active' : 'toolbar-icon'
+            }
+            onClick={this.handleBoldClick}
+          />
+          <ItalicIcon
+            className={
+              this.state.style.italic ? 'toolbar-icon active' : 'toolbar-icon'
+            }
+            onClick={this.handleItalicClick}
+          />
           <span className="status">
             offset: {this.state.caret && this.state.caret.offset}
           </span>
@@ -317,12 +326,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
             sindex: {this.state.sindex && this.state.sindex}
           </span>
         </div>
-        <div
-          className="document"
-          onClick={this.handleClick}
-          onKeyDown={this.handleKeyDown}
-          tabIndex={0}
-        >
+        <div className="document" onClick={this.handleClick}>
           {this.state.caret && (
             <div className="caret" style={this.caretToCSSProps()}></div>
           )}
