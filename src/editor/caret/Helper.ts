@@ -31,6 +31,7 @@ export function incrementOffset(
     // go to next paragraph
     pindex++
     sindex = 0
+    offset = 0
   }
 
   if (pindex < pCount) {

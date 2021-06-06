@@ -61,8 +61,8 @@ export function Write(
       const newNode: TextNode = { style, text: key }
 
       node.text = head
-      paragraph.splice(props.sindex + 1, 0, newNode)
-      paragraph.splice(props.sindex + 2, 0, rightNode)
+      paragraph.splice(sindex + 1, 0, newNode)
+      paragraph.splice(sindex + 2, 0, rightNode)
       caret.offset = 1
       sindex++
     } else {

@@ -21,6 +21,8 @@ export function moveRight(props: MoverProps): Object {
     return { direction: undefined }
   }
 
+  console.log(output)
+
   const { offset, pindex, sindex } = output
   const p = document.querySelectorAll('.paragraph')[pindex] as HTMLElement
 
