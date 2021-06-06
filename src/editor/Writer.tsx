@@ -19,45 +19,59 @@ export function Write(
 } {
   const caret = { ...props.caret }
   let sindex = props.sindex
-  const node = props.paragraphs[props.pindex][sindex]
   const paragraphs = props.paragraphs
+  const paragraph = props.paragraphs[props.pindex]
+  const node = paragraph[sindex]
   if (stylesMatch(node.style, style)) {
     const text = [
       node.text.slice(0, caret.offset),
       key,
       node.text.slice(caret.offset)
     ].join('')
-    paragraphs[props.pindex][sindex].text = text
+    node.text = text
     caret.offset++
   } else {
     console.log('styles are different')
-    if (
-      sindex + 1 < paragraphs[props.pindex].length &&
-      caret.offset === node.text.length
-    ) {
-      const next = paragraphs[props.pindex][sindex + 1]
+    if (sindex + 1 < paragraph.length && caret.offset === node.text.length) {
+      const next = paragraph[sindex + 1]
       if (stylesMatch(next.style, style)) {
         // merge with next node
         console.log('merge with next node')
-        const next = paragraphs[props.pindex][sindex + 1]
+        const next = paragraph[sindex + 1]
         const text = [next.text.slice(0, 1), key, next.text.slice(1)].join('')
-        paragraphs[props.pindex][sindex + 1].text = text
+        paragraph[sindex + 1].text = text
         caret.offset = 1
         sindex++
       } else {
         // insert new node with different style
         console.log('insert new node with different style')
         const newNode: TextNode = { style, text: key }
-        paragraphs[props.pindex].splice(sindex + 1, 0, newNode)
+        paragraph.splice(sindex + 1, 0, newNode)
         caret.offset = 1
         sindex++
       }
     } else if (caret.offset < node.text.length) {
       // split the current node and insert new
       console.log('split the current node and insert new')
+      const text = node.text
+      const head = text.slice(0, caret.offset)
+      const tail = text.slice(caret.offset)
+
+      const rightNode: TextNode = { style: node.style, text: tail }
+      const newNode: TextNode = { style, text: key }
+
+      node.text = head
+      paragraph.splice(props.sindex + 1, 0, newNode)
+      paragraph.splice(props.sindex + 2, 0, rightNode)
+      caret.offset = 1
+      sindex++
     } else {
       // add new node to the end
       console.log('add new node to the end')
+      const newNode: TextNode = { style, text: key }
+      paragraph.push(newNode)
+      caret.offset = 1
+      sindex++
     }
   }
 

@@ -5,3 +5,4 @@ scroll pushing when caret moves out of view
 immutability with this.state?
 moveup/down errors
 make so clicking outside vanishes caret
+left/right when moving between paragraphs
