@@ -1,28 +1,67 @@
-import { WriterProps, TextNode, Style, Direction } from './Types'
+import { WriterProps, TextNode, Style, Direction, Caret } from './Types'
+import { incrementOffset } from './caret/Helper'
+
+function stylesMatch(s1: Style, s2: Style): Boolean {
+  return s1.bold === s2.bold && s1.italic === s2.italic
+}
+
+function decidePlacement(paragraphs: Array<Array<TextNode>>) {}
 
 export function Write(
   props: WriterProps,
   key: string,
   style: Style
 ): {
+  caret: Caret
+  sindex: number
   paragraphs: Array<Array<TextNode>>
   direction: Direction
 } {
-  const node = props.paragraphs[props.pindex][props.sindex]
+  const caret = { ...props.caret }
+  let sindex = props.sindex
+  const node = props.paragraphs[props.pindex][sindex]
   const paragraphs = props.paragraphs
-  if (node.style.bold === style.bold && node.style.italic === style.italic) {
+  if (stylesMatch(node.style, style)) {
     const text = [
-      node.text.slice(0, props.caret.offset),
+      node.text.slice(0, caret.offset),
       key,
-      node.text.slice(props.caret.offset)
+      node.text.slice(caret.offset)
     ].join('')
-    paragraphs[props.pindex][props.sindex].text = text
+    paragraphs[props.pindex][sindex].text = text
+    caret.offset++
   } else {
-    console.log('not the same')
-    // TODO
+    console.log('styles are different')
+    if (
+      sindex + 1 < paragraphs[props.pindex].length &&
+      caret.offset === node.text.length
+    ) {
+      const next = paragraphs[props.pindex][sindex + 1]
+      if (stylesMatch(next.style, style)) {
+        // merge with next node
+        console.log('merge with next node')
+        const next = paragraphs[props.pindex][sindex + 1]
+        const text = [next.text.slice(0, 1), key, next.text.slice(1)].join('')
+        paragraphs[props.pindex][sindex + 1].text = text
+        caret.offset = 1
+        sindex++
+      } else {
+        // insert new node with different style
+        console.log('insert new node with different style')
+        const newNode: TextNode = { style, text: key }
+        paragraphs[props.pindex].splice(sindex + 1, 0, newNode)
+        caret.offset = 1
+        sindex++
+      }
+    } else if (caret.offset < node.text.length) {
+      // split the current node and insert new
+      console.log('split the current node and insert new')
+    } else {
+      // add new node to the end
+      console.log('add new node to the end')
+    }
   }
 
-  return { paragraphs, direction: Direction.Write }
+  return { caret, sindex, paragraphs, direction: Direction.Write }
 }
 
 export function Delete(props: WriterProps): Object | null {

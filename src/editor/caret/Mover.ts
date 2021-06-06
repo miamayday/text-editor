@@ -396,8 +396,8 @@ export function moveDown(props: MoverProps): Object {
 export function moveAfterWrite(props: MoverProps): Object {
   const p = document.querySelectorAll('.paragraph')[props.pindex] as HTMLElement
   const span = p.children[props.sindex]
-  const [x, y] = Coords.getCoords(span, props.caret.offset + 1)
-  const caret = { offset: props.caret.offset + 1, x, y }
+  const [x, y] = Coords.getCoords(span, props.caret.offset)
+  const caret = { offset: props.caret.offset, x, y }
   return {
     caret,
     pindex: props.pindex,
