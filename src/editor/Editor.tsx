@@ -143,6 +143,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
     }
 
     this.setState({ ...this.state, ...state })
+    console.log(this.state.paragraphs)
   }
 
   setCaretForSpan(props: SetterProps): void {
@@ -205,7 +206,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
   /* Event handlers */
 
   handleKeyDown(event: React.KeyboardEvent): void {
-    event.preventDefault()
+    //event.preventDefault()
 
     switch (event.key) {
       case 'ArrowUp':
@@ -225,6 +226,8 @@ class Editor extends React.Component<EditorProps, EditorState> {
         break
       case 'Backspace':
         this.setState({ command: Command.Delete })
+        break
+      case 'F5':
         break
       default:
         this.setState({ command: Command.Write, key: event.key })

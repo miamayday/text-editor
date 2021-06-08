@@ -1,11 +1,8 @@
 import { WriterProps, TextNode, Style, Direction, Caret } from './Types'
-import { incrementOffset } from './caret/Helper'
 
 function stylesMatch(s1: Style, s2: Style): Boolean {
   return s1.bold === s2.bold && s1.italic === s2.italic
 }
-
-function decidePlacement(paragraphs: Array<Array<TextNode>>) {}
 
 export function Write(
   props: WriterProps,
@@ -181,9 +178,16 @@ export function Delete(props: WriterProps): Object | null {
   props.paragraphs[props.pindex][props.sindex].text = text
   props.caret.offset--
   if (props.caret.offset < 1 && props.sindex > 0) {
+    console.log('adjust placement')
     props.caret.offset =
       props.paragraphs[props.pindex][props.sindex - 1].text.length
     props.sindex--
+  } else if (
+    props.caret.offset === 0 &&
+    props.paragraphs[props.pindex].length > 1
+  ) {
+    console.log('delete preceding span')
+    props.paragraphs[props.pindex].splice(0, 1)
   }
 
   return {
