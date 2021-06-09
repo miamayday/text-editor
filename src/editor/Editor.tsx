@@ -54,13 +54,98 @@ class Editor extends React.Component<EditorProps, EditorState> {
         bold: false,
         italic: false
       },
-      paragraphs: examples
+      paragraphs: examples,
+      editorRef: React.createRef<HTMLDivElement>()
     }
 
     this.handleClick = this.handleClick.bind(this)
     this.handleKeyDown = this.handleKeyDown.bind(this)
     this.handleBoldClick = this.handleBoldClick.bind(this)
     this.handleItalicClick = this.handleItalicClick.bind(this)
+    this.handleClickOutside = this.handleClickOutside.bind(this)
+  }
+
+  componentDidMount() {
+    //document.addEventListener('mousedown', this.handleClickOutside)
+  }
+
+  componentWillUnmount() {
+    //document.removeEventListener('mousedown', this.handleClickOutside)
+  }
+
+  handleClickOutside: { (event: MouseEvent): void } = (event: MouseEvent) => {
+    event.preventDefault()
+
+    const el = event.target
+    if (!(el instanceof HTMLElement)) {
+      return
+    }
+
+    // check whether user clicked outside the editor
+
+    if (
+      this.state.editorRef.current !== null &&
+      !this.state.editorRef.current.contains(el)
+    ) {
+      console.log('clicked outside')
+      this.setState({
+        caret: undefined,
+        direction: undefined,
+        pindex: undefined,
+        sindex: undefined
+      })
+      return
+    }
+
+    if (el.className === null) {
+      return
+    }
+
+    console.log('className:', el.className)
+
+    // check whether user clicked on text
+
+    if (el.className === 'caret') {
+      console.log('clicked on caret: do nothing')
+      return
+    } else if (el.className !== 'text-node' && el.className !== 'paragraph') {
+      console.log('clicked on middle ground: do nothing')
+      return
+    }
+
+    // check offset
+
+    const offset = window.getSelection()?.focusOffset
+    if (offset === undefined) {
+      console.log('focusOffset is undefined')
+      return
+    }
+
+    console.log('selection:', window.getSelection())
+
+    console.log('focusOffset:', offset)
+
+    const props: SetterProps = {
+      el,
+      offset,
+      x: event.clientX,
+      y: event.clientY,
+      length: (pindex: number, sindex: number) => {
+        return this.state.paragraphs[pindex][sindex].text.length
+      },
+      spanCount: (pindex: number) => {
+        return this.state.paragraphs[pindex].length
+      },
+      pCount: this.state.paragraphs.length
+    }
+
+    console.log(props)
+
+    if (el.className === 'text-node') {
+      this.setCaretForSpan(props)
+    } else if (el.className === 'paragraph') {
+      this.setCaretForParagraph(props)
+    }
   }
 
   componentDidUpdate(): void {
@@ -303,7 +388,12 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
   render() {
     return (
-      <div className="editor" onKeyDown={this.handleKeyDown} tabIndex={0}>
+      <div
+        className="editor"
+        ref={this.state.editorRef}
+        onKeyDown={this.handleKeyDown}
+        tabIndex={0}
+      >
         {this.state.mouse && (
           <div
             className="mouse"
