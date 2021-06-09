@@ -54,98 +54,14 @@ class Editor extends React.Component<EditorProps, EditorState> {
         bold: false,
         italic: false
       },
-      paragraphs: examples,
-      editorRef: React.createRef<HTMLDivElement>()
+      paragraphs: examples
     }
 
     this.handleClick = this.handleClick.bind(this)
+    this.handleClickOutside = this.handleClickOutside.bind(this)
     this.handleKeyDown = this.handleKeyDown.bind(this)
     this.handleBoldClick = this.handleBoldClick.bind(this)
     this.handleItalicClick = this.handleItalicClick.bind(this)
-    this.handleClickOutside = this.handleClickOutside.bind(this)
-  }
-
-  componentDidMount() {
-    //document.addEventListener('mousedown', this.handleClickOutside)
-  }
-
-  componentWillUnmount() {
-    //document.removeEventListener('mousedown', this.handleClickOutside)
-  }
-
-  handleClickOutside: { (event: MouseEvent): void } = (event: MouseEvent) => {
-    event.preventDefault()
-
-    const el = event.target
-    if (!(el instanceof HTMLElement)) {
-      return
-    }
-
-    // check whether user clicked outside the editor
-
-    if (
-      this.state.editorRef.current !== null &&
-      !this.state.editorRef.current.contains(el)
-    ) {
-      console.log('clicked outside')
-      this.setState({
-        caret: undefined,
-        direction: undefined,
-        pindex: undefined,
-        sindex: undefined
-      })
-      return
-    }
-
-    if (el.className === null) {
-      return
-    }
-
-    console.log('className:', el.className)
-
-    // check whether user clicked on text
-
-    if (el.className === 'caret') {
-      console.log('clicked on caret: do nothing')
-      return
-    } else if (el.className !== 'text-node' && el.className !== 'paragraph') {
-      console.log('clicked on middle ground: do nothing')
-      return
-    }
-
-    // check offset
-
-    const offset = window.getSelection()?.focusOffset
-    if (offset === undefined) {
-      console.log('focusOffset is undefined')
-      return
-    }
-
-    console.log('selection:', window.getSelection())
-
-    console.log('focusOffset:', offset)
-
-    const props: SetterProps = {
-      el,
-      offset,
-      x: event.clientX,
-      y: event.clientY,
-      length: (pindex: number, sindex: number) => {
-        return this.state.paragraphs[pindex][sindex].text.length
-      },
-      spanCount: (pindex: number) => {
-        return this.state.paragraphs[pindex].length
-      },
-      pCount: this.state.paragraphs.length
-    }
-
-    console.log(props)
-
-    if (el.className === 'text-node') {
-      this.setCaretForSpan(props)
-    } else if (el.className === 'paragraph') {
-      this.setCaretForParagraph(props)
-    }
   }
 
   componentDidUpdate(): void {
@@ -318,6 +234,25 @@ class Editor extends React.Component<EditorProps, EditorState> {
     }
   }
 
+  handleClickOutside(event: React.MouseEvent): void {
+    event.preventDefault()
+
+    if (event.target instanceof HTMLElement) {
+      const el = event.target
+      if (el.className) {
+        if (el.className === 'app') {
+          console.log('clicked outside')
+          this.setState({
+            caret: undefined,
+            direction: undefined,
+            pindex: undefined,
+            sindex: undefined
+          })
+        }
+      }
+    }
+  }
+
   handleClick(event: React.MouseEvent): void {
     event.preventDefault()
 
@@ -332,13 +267,13 @@ class Editor extends React.Component<EditorProps, EditorState> {
           el.className !== 'text-node' &&
           el.className !== 'paragraph'
         ) {
+          console.log('clicked on middle ground')
           this.setState({
             caret: undefined,
             direction: undefined,
             pindex: undefined,
             sindex: undefined
           })
-          console.log('undefined')
           return
         }
       }
@@ -389,62 +324,64 @@ class Editor extends React.Component<EditorProps, EditorState> {
   render() {
     return (
       <div
-        className="editor"
-        ref={this.state.editorRef}
+        className="app"
+        onClick={this.handleClickOutside}
         onKeyDown={this.handleKeyDown}
         tabIndex={0}
       >
-        {this.state.mouse && (
-          <div
-            className="mouse"
-            style={{
-              left: this.state.mouse.x + 'px',
-              top: this.state.mouse.y + 'px'
-            }}
-          ></div>
-        )}
-        <div className="toolbar">
-          <BoldIcon
-            className={
-              this.state.style.bold ? 'toolbar-icon active' : 'toolbar-icon'
-            }
-            onClick={this.handleBoldClick}
-          />
-          <ItalicIcon
-            className={
-              this.state.style.italic ? 'toolbar-icon active' : 'toolbar-icon'
-            }
-            onClick={this.handleItalicClick}
-          />
-          <span className="status">
-            offset: {this.state.caret && this.state.caret.offset}
-          </span>
-          <span className="status">
-            pindex: {this.state.pindex && this.state.pindex}
-          </span>
-          <span className="status">
-            sindex: {this.state.sindex && this.state.sindex}
-          </span>
-        </div>
-        <div className="document" onClick={this.handleClick}>
-          {this.state.caret && (
-            <div className="caret" style={this.caretToCSSProps()}></div>
+        <div className="editor">
+          {this.state.mouse && (
+            <div
+              className="mouse"
+              style={{
+                left: this.state.mouse.x + 'px',
+                top: this.state.mouse.y + 'px'
+              }}
+            ></div>
           )}
-          {this.state.paragraphs.map((p, i) => (
-            <p key={`p-${i}`} p-index={i} className="paragraph">
-              {p.map((node, j) => (
-                <span
-                  key={`span-${i}-${j}`}
-                  p-index={i}
-                  s-index={j}
-                  className="text-node"
-                  style={this.nodeToCSSProps(node.style)}
-                >
-                  {node.text}
-                </span>
-              ))}
-            </p>
-          ))}
+          <div className="toolbar">
+            <BoldIcon
+              className={
+                this.state.style.bold ? 'toolbar-icon active' : 'toolbar-icon'
+              }
+              onClick={this.handleBoldClick}
+            />
+            <ItalicIcon
+              className={
+                this.state.style.italic ? 'toolbar-icon active' : 'toolbar-icon'
+              }
+              onClick={this.handleItalicClick}
+            />
+            <span className="status">
+              offset: {this.state.caret && this.state.caret.offset}
+            </span>
+            <span className="status">
+              pindex: {this.state.pindex && this.state.pindex}
+            </span>
+            <span className="status">
+              sindex: {this.state.sindex && this.state.sindex}
+            </span>
+          </div>
+          <div className="document" onClick={this.handleClick}>
+            {this.state.caret && (
+              <div className="caret" style={this.caretToCSSProps()}></div>
+            )}
+            {this.state.paragraphs.map((p, i) => (
+              <p key={`p-${i}`} p-index={i} className="paragraph">
+                {p.map((node, j) => (
+                  <span
+                    key={`span-${i}-${j}`}
+                    p-index={i}
+                    s-index={j}
+                    className="text-node"
+                    style={this.nodeToCSSProps(node.style)}
+                  >
+                    {node.text}
+                  </span>
+                ))}
+              </p>
+            ))}
+          </div>
         </div>
       </div>
     )

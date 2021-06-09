@@ -53,7 +53,6 @@ export type EditorState = {
   pindex?: number
   sindex?: number
   paragraphs: Array<Array<TextNode>>
-  editorRef: React.RefObject<HTMLDivElement>
 }
 
 /* Caret */

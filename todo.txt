@@ -1,8 +1,5 @@
-1. make so clicking outside vanishes caret !??!?!
-refs on editor mess up caret setting!!
-offset goes to zero since the selection is wrong
-2. selection...
-3. coord static number related config
+1. selection...
+2. coord static number related config
 
 rich editing
 footer
