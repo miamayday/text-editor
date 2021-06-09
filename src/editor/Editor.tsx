@@ -143,7 +143,6 @@ class Editor extends React.Component<EditorProps, EditorState> {
     }
 
     this.setState({ ...this.state, ...state })
-    console.log(this.state.paragraphs)
   }
 
   setCaretForSpan(props: SetterProps): void {
@@ -239,8 +238,15 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
     if (event.target instanceof HTMLElement) {
       const el = event.target
-      if (el.className)
-        if (el.className !== 'text-node' && el.className !== 'paragraph') {
+
+      if (el.className) {
+        if (el.className === 'caret') {
+          console.log('clicked on caret')
+          return
+        } else if (
+          el.className !== 'text-node' &&
+          el.className !== 'paragraph'
+        ) {
           this.setState({
             caret: undefined,
             direction: undefined,
@@ -250,6 +256,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
           console.log('undefined')
           return
         }
+      }
 
       const offset = window.getSelection()?.focusOffset
       if (offset === undefined) {

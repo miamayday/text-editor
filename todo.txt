@@ -1,7 +1,11 @@
+1. make so clicking outside vanishes caret
+2. selection...
+
 rich editing
 footer
-clicking on caret
 scroll pushing when caret moves out of view
 immutability with this.state?
 moveup/down errors
-make so clicking outside vanishes caret
+
+! removes undefined/null
+? adds undefined or sth
