@@ -239,16 +239,14 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
     if (event.target instanceof HTMLElement) {
       const el = event.target
-      if (el.className) {
-        if (el.className === 'app') {
-          console.log('clicked outside')
-          this.setState({
-            caret: undefined,
-            direction: undefined,
-            pindex: undefined,
-            sindex: undefined
-          })
-        }
+      if (el.className && el.className === 'app') {
+        console.log('clicked outside')
+        this.setState({
+          caret: undefined,
+          direction: undefined,
+          pindex: undefined,
+          sindex: undefined
+        })
       }
     }
   }
