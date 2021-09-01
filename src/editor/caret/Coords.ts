@@ -2,12 +2,15 @@
    - helpful functions for computing caret coordinates
 */
 
+const CARET_HEIGHT = 20
+const FONT_SIZE = 16
+
 export function calcLeft(left: number): number {
   return left
 }
 
 export function calcTop(top: number): number {
-  return top - 5
+  return top
 }
 
 export function calcMiddle(x1: number, x2: number) {

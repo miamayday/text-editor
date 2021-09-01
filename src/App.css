@@ -87,7 +87,7 @@
 .document {
   position: relative;
   height: 300px;
-  cursor: text;
+  /*cursor: text;*/
   overflow-y: auto;
   /*border: 1px solid rgb(210, 214, 248);*/
   scrollbar-width: auto !important;
@@ -97,9 +97,9 @@
 
 .caret {
   width: 1px;
-  height: 28px;
+  height: 20px;
   position: absolute;
-  font-size: 20px;
+  /*font-size: 28px;*/
   background-color: rgb(133, 89, 255);
 }
 
@@ -130,7 +130,7 @@
   font-size: 16px;
   font-family: 'Lora', serif;
   color: rgb(46, 46, 46);
-  line-height: 28px;
+  line-height: 24px;
   /*overflow-x: auto;
   white-space: pre-wrap;
   word-wrap: break-word;**/

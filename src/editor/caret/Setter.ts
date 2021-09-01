@@ -1,9 +1,8 @@
-/**
- * Caret setting after clicking somewhere on the editor.
- */
-
 import * as Coords from './Coords'
 import { TextNode, Caret, Mouse, EditorState, SetterProps } from '../Types'
+
+const PARAGRAPH_PADDING = 100
+const CARET_HEIGHT = 20
 
 /**
  * Fixes the caret to the nearest span element (text node) in the paragraph.
@@ -31,7 +30,8 @@ function fixToNearestSpan(
 
   const caret: Caret = { offset, x: 0, y: 0 }
 
-  const outOfBounds = checkBounds(p, arr, clickX, cont.left + 100)
+  const outOfBounds = checkBounds(p, arr, clickX, cont.left + PARAGRAPH_PADDING)
+
   if (outOfBounds && offset > 0) {
     console.log('snap to start')
 
@@ -51,15 +51,19 @@ function fixToNearestSpan(
       // TODO: change caret, overlap at end
 
       // remember calcTop, spans are not the right height!
-      if (Coords.calcTop(y) <= clickY && clickY <= Coords.calcTop(y + 28)) {
+      if (
+        Coords.calcTop(y) <= clickY &&
+        clickY <= Coords.calcTop(y + CARET_HEIGHT)
+      ) {
         // on the same line
-        caret.x = 100
+        caret.x = PARAGRAPH_PADDING
         caret.y = Coords.calcTop(rect.top - cont.top + d.scrollTop)
 
-        const mouse: Mouse = { x: cont.left + 100, y }
+        const mouse: Mouse = { x: cont.left + PARAGRAPH_PADDING, y }
         return { caret, mouse, sindex: si }
       } else if (Coords.calcTop(y) > clickY) {
         console.log('already past y')
+        // WRONG!!
         break
       }
     }
@@ -78,15 +82,15 @@ function fixToNearestSpan(
     if (node.text.length === 0) {
       // happens with empty paragraphs
       console.log('empty paragraph')
-      const x = cont.left + 100 // margin
-      const y = p.offsetTop + cont.top + d.scrollTop + 4 // (28 - 20) / 2
+      const x = cont.left + PARAGRAPH_PADDING // margin
+      const y = p.offsetTop + cont.top + d.scrollTop + 0 // (28 - 20) / 2 ???
       const diff = Math.sqrt(Math.pow(clickX - x, 2) + Math.pow(clickY - y, 2))
       if (diff < bestDiff) {
         bestX = x
         bestY = y
         bestDiff = diff
         bestSindex = 0
-        caret.x = 100
+        caret.x = PARAGRAPH_PADDING
         caret.y = p.offsetTop
         caret.offset = 0
       }
@@ -117,6 +121,15 @@ function fixToNearestSpan(
   return { caret, mouse, sindex: bestSindex }
 }
 
+/**
+ * Checks if the user clicked on the empty space to the left of a line.
+ *
+ * @param p Paragraph element (div)
+ * @param arr Array of paragraphs (text node arrays)
+ * @param clickX Mouse click x position
+ * @param start X coordinate for left text boundary
+ * @returns True if user clicked on the empty space
+ */
 function checkBounds(
   p: Element,
   arr: Array<TextNode>,
@@ -162,7 +175,12 @@ export function setCaretForSpan(
     const d = document.querySelectorAll('.document')[0]
     const cont = d.getBoundingClientRect()
 
-    const outOfBounds = checkBounds(p, arr, props.x, cont.left + 100)
+    const outOfBounds = checkBounds(
+      p,
+      arr,
+      props.x,
+      cont.left + PARAGRAPH_PADDING
+    )
     if (outOfBounds && props.offset > 0) {
       console.log('snap to start')
       let nextOffset = props.offset + 1
@@ -172,7 +190,7 @@ export function setCaretForSpan(
       }
       const span = p.children[sindex]
       const rect = Coords.getRectFromRange(span.childNodes[0], nextOffset)
-      caret.x = 100
+      caret.x = PARAGRAPH_PADDING
       caret.y = Coords.calcTop(rect.top - cont.top + d.scrollTop)
     }
 
