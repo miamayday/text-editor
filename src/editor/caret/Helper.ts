@@ -1,3 +1,5 @@
+/* Helper functions used by Writer.tsx */
+
 import * as Coords from './Coords'
 import { TextNode } from '../Types'
 

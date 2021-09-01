@@ -1,6 +1,4 @@
-/**
- * Caret movement with arrow keys.
- */
+/* Caret movement with arrow keys */
 
 import * as Coords from './Coords'
 import { MoverProps } from '../Types'

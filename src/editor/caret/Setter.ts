@@ -1,3 +1,5 @@
+/* Caret positioning to nearest character */
+
 import * as Coords from './Coords'
 import { TextNode, Caret, Mouse, EditorState, SetterProps } from '../Types'
 
@@ -52,17 +54,14 @@ function fixToNearestSpan(
       console.log('rect.top:', y)
       console.log('clickY:', clickY)
 
-      if (
-        Coords.calcTop(y) <= clickY &&
-        clickY <= Coords.calcTop(y + CARET_HEIGHT)
-      ) {
+      if (y <= clickY && clickY <= y + CARET_HEIGHT) {
         // on the same line
         caret.x = PARAGRAPH_PADDING
-        caret.y = Coords.calcTop(rect.top - cont.top + d.scrollTop)
+        caret.y = rect.top - cont.top + d.scrollTop
 
         const mouse: Mouse = { x: cont.left + PARAGRAPH_PADDING, y }
         return { caret, mouse, sindex: si }
-      } else if (Coords.calcTop(y) > clickY) {
+      } else if (y > clickY) {
         console.log('already past y')
         // WRONG!!
         break
