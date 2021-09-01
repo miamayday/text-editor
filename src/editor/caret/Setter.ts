@@ -5,6 +5,16 @@
 import * as Coords from './Coords'
 import { TextNode, Caret, Mouse, EditorState, SetterProps } from '../Types'
 
+/**
+ * Fixes the caret to the nearest span element (text node) in the paragraph.
+ *
+ * @param p Paragaph element (div)
+ * @param arr Array of paragraphs (text node arrays)
+ * @param offset focusOffset
+ * @param clickX Mouse click x position
+ * @param clickY Mouse click y position
+ * @returns
+ */
 function fixToNearestSpan(
   p: HTMLElement,
   arr: Array<TextNode>,
@@ -20,8 +30,6 @@ function fixToNearestSpan(
   const cont = d.getBoundingClientRect()
 
   const caret: Caret = { offset, x: 0, y: 0 }
-
-  // TODO: two for loops, maybe try one or some other solution
 
   const outOfBounds = checkBounds(p, arr, clickX, cont.left + 100)
   if (outOfBounds && offset > 0) {
@@ -62,10 +70,27 @@ function fixToNearestSpan(
   let bestDiff = Number.MAX_VALUE
   let bestSindex = 0
 
+  console.log('traverse spans containing offset')
+
   // traverse the spans that contain the offset
   for (let sindex = 0; sindex < arr.length; sindex++) {
     const node = arr[sindex]
-    if (node.text.length >= offset) {
+    if (node.text.length === 0) {
+      // happens with empty paragraphs
+      console.log('empty paragraph')
+      const x = cont.left + 100 // margin
+      const y = p.offsetTop + cont.top + d.scrollTop + 4 // (28 - 20) / 2
+      const diff = Math.sqrt(Math.pow(clickX - x, 2) + Math.pow(clickY - y, 2))
+      if (diff < bestDiff) {
+        bestX = x
+        bestY = y
+        bestDiff = diff
+        bestSindex = 0
+        caret.x = 100
+        caret.y = p.offsetTop
+        caret.offset = 0
+      }
+    } else if (node.text.length >= offset) {
       const span = p.children[sindex]
       const rect = Coords.getRectFromRange(span.childNodes[0], offset)
       const [x, y] = [rect.left, rect.top]
@@ -84,21 +109,6 @@ function fixToNearestSpan(
         bestSindex = sindex
         caret.x = Coords.calcLeft(rect.left - cont.left)
         caret.y = Coords.calcTop(rect.top - cont.top + d.scrollTop)
-      }
-    } else if (node.text.length === 0) {
-      // happens with empty paragraphs
-      console.log('empty paragraph')
-      const x = cont.left + 100 // margin
-      const y = p.offsetTop + cont.top + d.scrollTop + 4 // (28 - 20) / 2
-      const diff = Math.sqrt(Math.pow(clickX - x, 2) + Math.pow(clickY - y, 2))
-      if (diff < bestDiff) {
-        bestX = x
-        bestY = y
-        bestDiff = diff
-        bestSindex = 0
-        caret.x = 100
-        caret.y = p.offsetTop
-        caret.offset = 0
       }
     }
   }
@@ -191,18 +201,18 @@ export function setCaretForParagraph(
   props: SetterProps
 ): Object | null {
   const attrPindex = props.el.getAttribute('p-index')
-  if (attrPindex !== null) {
-    const pindex = Number(attrPindex)
-    const paragraph = editor.paragraphs[pindex]
-    const state = fixToNearestSpan(
-      props.el,
-      paragraph,
-      props.offset,
-      props.x,
-      props.y
-    )
-    const style = { ...paragraph[state.sindex].style }
-    return { ...state, pindex, style }
+  if (attrPindex === null) {
+    return null
   }
-  return null
+  const pindex = Number(attrPindex)
+  const paragraph = editor.paragraphs[pindex]
+  const state = fixToNearestSpan(
+    props.el,
+    paragraph,
+    props.offset,
+    props.x,
+    props.y
+  )
+  const style = { ...paragraph[state.sindex].style }
+  return { ...state, pindex, style }
 }
