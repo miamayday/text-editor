@@ -3,6 +3,7 @@ import { TextNode, Caret, Mouse, EditorState, SetterProps } from '../Types'
 
 const PARAGRAPH_PADDING = 100
 const CARET_HEIGHT = 20
+const LINE_HEIGHT = 34
 
 /**
  * Fixes the caret to the nearest span element (text node) in the paragraph.
@@ -12,7 +13,7 @@ const CARET_HEIGHT = 20
  * @param offset focusOffset
  * @param clickX Mouse click x position
  * @param clickY Mouse click y position
- * @returns
+ * @returns New state
  */
 function fixToNearestSpan(
   p: HTMLElement,
@@ -48,9 +49,9 @@ function fixToNearestSpan(
       const rect = Coords.getRectFromRange(span.childNodes[0], nextOffset)
       const y = rect.top
 
-      // TODO: change caret, overlap at end
+      console.log('rect.top:', y)
+      console.log('clickY:', clickY)
 
-      // remember calcTop, spans are not the right height!
       if (
         Coords.calcTop(y) <= clickY &&
         clickY <= Coords.calcTop(y + CARET_HEIGHT)
@@ -82,8 +83,8 @@ function fixToNearestSpan(
     if (node.text.length === 0) {
       // happens with empty paragraphs
       console.log('empty paragraph')
-      const x = cont.left + PARAGRAPH_PADDING // margin
-      const y = p.offsetTop + cont.top + d.scrollTop + 0 // (28 - 20) / 2 ???
+      const x = cont.left + PARAGRAPH_PADDING
+      const y = p.offsetTop + cont.top + d.scrollTop
       const diff = Math.sqrt(Math.pow(clickX - x, 2) + Math.pow(clickY - y, 2))
       if (diff < bestDiff) {
         bestX = x
@@ -91,18 +92,25 @@ function fixToNearestSpan(
         bestDiff = diff
         bestSindex = 0
         caret.x = PARAGRAPH_PADDING
-        caret.y = p.offsetTop
+        caret.y = p.offsetTop + (LINE_HEIGHT - CARET_HEIGHT) / 2
         caret.offset = 0
       }
+      break
     } else if (node.text.length >= offset) {
       const span = p.children[sindex]
       const rect = Coords.getRectFromRange(span.childNodes[0], offset)
       const [x, y] = [rect.left, rect.top]
 
-      // when surpass y just stop
-      if (Coords.calcTop(y) > clickY) {
-        console.log('already past y')
-        break
+      // when surpass final bound just stop
+      if (y > clickY) {
+        const divider = y - (LINE_HEIGHT - CARET_HEIGHT) / 2
+        console.log('divider:', divider)
+        const finalBound = divider + LINE_HEIGHT
+        if (y > finalBound) {
+          // does it ever come to this??
+          console.log('surpass final bound')
+          break
+        }
       }
 
       const diff = Math.sqrt(Math.pow(clickX - x, 2) + Math.pow(clickY - y, 2))
@@ -111,8 +119,8 @@ function fixToNearestSpan(
         bestY = y
         bestDiff = diff
         bestSindex = sindex
-        caret.x = Coords.calcLeft(rect.left - cont.left)
-        caret.y = Coords.calcTop(rect.top - cont.top + d.scrollTop)
+        caret.x = rect.left - cont.left
+        caret.y = rect.top - cont.top + d.scrollTop
       }
     }
   }
@@ -191,7 +199,7 @@ export function setCaretForSpan(
       const span = p.children[sindex]
       const rect = Coords.getRectFromRange(span.childNodes[0], nextOffset)
       caret.x = PARAGRAPH_PADDING
-      caret.y = Coords.calcTop(rect.top - cont.top + d.scrollTop)
+      caret.y = rect.top - cont.top + d.scrollTop
     }
 
     // fix offset
