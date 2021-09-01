@@ -199,7 +199,7 @@ export function Delete(props: WriterProps): Object | null {
   }
 }
 
-export function newLine(props: WriterProps): {
+export function Newline(props: WriterProps): {
   paragraphs: Array<Array<TextNode>>
   direction: Direction
 } {

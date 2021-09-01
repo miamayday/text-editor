@@ -95,6 +95,11 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
   /* Caret navigation */
 
+  /**
+   * Calls the Mover to move the caret to the current Direction.
+   *
+   * @see Mover.ts
+   */
   moveCaret(): void {
     if (
       this.state.caret === undefined ||
@@ -146,6 +151,12 @@ class Editor extends React.Component<EditorProps, EditorState> {
     this.setState({ ...this.state, ...state })
   }
 
+  /**
+   * Calls the Setter to set the caret within the clicked span (text node).
+   *
+   * @see setCaretForSpan function in Setter.ts
+   * @param props Information related to the position of the cursor and the editor state.
+   */
   setCaretForSpan(props: SetterProps): void {
     console.log('set caret for span', props.el)
 
@@ -155,6 +166,12 @@ class Editor extends React.Component<EditorProps, EditorState> {
     }
   }
 
+  /**
+   * Calls the Setter to set the caret within the clicked paragraph.
+   *
+   * @see setCaretForParagraph function in Setter.ts
+   * @param props Information related to the position of the cursor and the editor state.
+   */
   setCaretForParagraph(props: SetterProps): void {
     console.log('set caret for paragraph', props.el)
 
@@ -166,6 +183,11 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
   /* Editing */
 
+  /**
+   * Call the Writer to execute one of the three commands: Write, Delete, Newline.
+   *
+   * @see Writer.tsx
+   */
   executeCommand(): void {
     if (
       this.state.caret === undefined ||
@@ -196,7 +218,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
         }
         break
       case Command.NewLine:
-        this.setState(Writer.newLine(props))
+        this.setState(Writer.Newline(props))
         break
     }
 
@@ -251,6 +273,12 @@ class Editor extends React.Component<EditorProps, EditorState> {
     }
   }
 
+  /**
+   * Handles a mouse click event on the document.
+   *
+   * Sets the caret depending on where the user clicks. Different procedures
+   * are used for text nodes and paragraphs.
+   */
   handleClick(event: React.MouseEvent): void {
     event.preventDefault()
 
@@ -285,7 +313,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
       const props: SetterProps = {
         el,
-        offset, // TODO: what about between two spans? and empty paragraph?
+        offset,
         x: event.clientX,
         y: event.clientY,
         length: (pindex: number, sindex: number) => {
