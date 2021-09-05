@@ -2,55 +2,62 @@
 
 import * as Coords from './Coords'
 import { MoverProps } from '../Types'
-import { incrementOffset, decrementOffset } from './Helper'
+import {
+  increment,
+  decrement,
+  incrementOffset,
+  decrementOffset
+} from './Helper'
+
+const PARAGRAPH_PADDING = 100
+const CARET_HEIGHT = 20
+const LINE_HEIGHT = 34
 
 export function moveRight(props: MoverProps): Object {
   console.log('move right')
-  const output = incrementOffset(
-    props.caret.offset,
-    props.pindex,
-    props.sindex,
-    props.length,
-    props.spanCount,
-    props.pCount
-  )
 
+  const output = increment(props)
   if (output === null) {
+    console.log('end of document')
     return { direction: undefined }
   }
 
-  console.log(output)
+  console.log('next position:', output)
 
   const { offset, pindex, sindex } = output
   const p = document.querySelectorAll('.paragraph')[pindex] as HTMLElement
 
-  // empty paragraph
+  // next position is empty paragraph
   if (props.length(pindex, sindex) === 0) {
     const caret = {
       offset,
-      x: 100,
-      y: p.offsetTop
+      x: PARAGRAPH_PADDING,
+      y: p.offsetTop + (LINE_HEIGHT - CARET_HEIGHT) / 2
     }
     return { caret, pindex, sindex, direction: undefined }
   }
 
+  // next position is span (text node) with text
   const span = p.children[sindex]
   const [x, y] = Coords.getCoords(span, offset)
 
   if (pindex === props.pindex) {
-    const oldSpan = p.children[props.sindex]
-    const oldCoords = Coords.getCoords(oldSpan, props.caret.offset)
-
-    if (props.caret.x === 100) {
+    // next position is next character from line start
+    if (props.caret.x === PARAGRAPH_PADDING) {
       const caret = { offset, x, y }
       return { caret, pindex, sindex, direction: undefined }
     }
 
+    // same paragraph, fetch old coordinates
+    const oldSpan = p.children[props.sindex]
+    const oldCoords = Coords.getCoords(oldSpan, props.caret.offset)
+
+    // next position is on the next line
     if (oldCoords[1] !== y) {
-      // next line
+      console.log('end of line --> start of line')
       const caret = {
         offset: offset - 1, // same offset must repeat for endline and startline
-        x: 100,
+        x: PARAGRAPH_PADDING,
         y
       }
       return { caret, pindex, sindex, direction: undefined }
@@ -63,14 +70,35 @@ export function moveRight(props: MoverProps): Object {
 
 export function moveLeft(props: MoverProps): Object {
   console.log('move left')
-  // not empty paragraph
+
+  const output = decrement(props)
+  if (output === null) {
+    console.log('start of document')
+    return { direction: undefined }
+  }
+
+  const { offset, pindex, sindex } = output
+  const p = document.querySelectorAll('.paragraph')[pindex] as HTMLElement
+
+  // next position is empty paragraph
+  if (props.length(pindex, sindex) === 0) {
+    const caret = {
+      offset,
+      x: PARAGRAPH_PADDING,
+      y: p.offsetTop + (LINE_HEIGHT - CARET_HEIGHT) / 2
+    }
+    return { caret, pindex, sindex, direction: undefined }
+  }
+
+  // check old position
   if (props.length(props.pindex, props.sindex) !== 0) {
     const p = document.querySelectorAll('.paragraph')[
       props.pindex
     ] as HTMLElement
     const span = p.children[props.sindex]
-    const realCoords = Coords.getCoords(span, props.caret.offset)
-    if (realCoords[1] !== props.caret.y) {
+    const [realX, realY] = Coords.getCoords(span, props.caret.offset)
+    if (realY !== props.caret.y) {
+      console.log('start of line --> end of line')
       // coords have been manipulated
       // meaning we're at the start of a line
       // because start offset == prev end offset
@@ -78,8 +106,8 @@ export function moveLeft(props: MoverProps): Object {
       // now fix to end of prev line
       const caret = {
         offset: props.caret.offset,
-        x: realCoords[0],
-        y: realCoords[1]
+        x: realX,
+        y: realY
       }
 
       return {
@@ -91,48 +119,27 @@ export function moveLeft(props: MoverProps): Object {
     }
   }
 
-  const output = decrementOffset(
-    props.caret.offset,
-    props.pindex,
-    props.sindex,
-    props.length,
-    props.spanCount
-  )
-
-  if (output === null) {
-    return { direction: undefined }
-  }
-
-  const { offset, pindex, sindex } = output
-  const p = document.querySelectorAll('.paragraph')[pindex] as HTMLElement
-
-  // empty paragraph
-  if (props.length(pindex, sindex) === 0) {
-    const caret = {
-      offset,
-      x: 100,
-      y: p.offsetTop
-    }
-    return { caret, pindex, sindex, direction: undefined }
-  }
-
+  // next position is span (text node) with text
   const span = p.children[sindex]
   const [x, y] = Coords.getCoords(span, offset)
 
   if (pindex === props.pindex) {
-    const oldSpan = p.children[props.sindex]
-    const oldCoords = Coords.getCoords(oldSpan, props.caret.offset)
-
-    if (props.caret.x === 100) {
+    // next position is next character from line start
+    if (props.caret.x === PARAGRAPH_PADDING) {
       const caret = { offset, x, y }
       return { caret, pindex, sindex, direction: undefined }
     }
 
+    // same paragraph, fetch old coordinates
+    const oldSpan = p.children[props.sindex]
+    const oldCoords = Coords.getCoords(oldSpan, props.caret.offset)
+
+    // next position is line start
     if (oldCoords[1] !== y) {
-      // previous line
+      console.log('fix to start')
       const caret = {
         offset: offset + 1, // same offset must repeat for endline and startline
-        x: 100,
+        x: PARAGRAPH_PADDING,
         y: props.caret.y
       }
       return { caret, pindex, sindex, direction: undefined }
@@ -192,7 +199,7 @@ export function moveUp(props: MoverProps): Object {
       if (props.length(output.pindex, output.sindex) === 0) {
         // empty paragraph
         caret.offset = 0
-        caret.x = 100
+        caret.x = PARAGRAPH_PADDING
         caret.y = p.offsetTop
         return {
           caret,
@@ -241,7 +248,7 @@ export function moveUp(props: MoverProps): Object {
     // document start
     if (output === null) {
       caret.offset = 0
-      caret.x = 100
+      caret.x = PARAGRAPH_PADDING
       sindex = 0
       break
     }
@@ -256,7 +263,7 @@ export function moveUp(props: MoverProps): Object {
     // line start
     if (y !== caret.y) {
       caret.offset = output.offset
-      caret.x = 100
+      caret.x = PARAGRAPH_PADDING
       sindex = output.sindex
       break
     }
@@ -316,7 +323,7 @@ export function moveDown(props: MoverProps): Object {
       if (props.length(output.pindex, output.sindex) === 0) {
         // empty paragraph
         caret.offset = 0
-        caret.x = 100
+        caret.x = PARAGRAPH_PADDING
         caret.y = p.offsetTop
         return {
           caret,
@@ -336,7 +343,7 @@ export function moveDown(props: MoverProps): Object {
     sindex = output.sindex
 
     if (y !== props.caret.y) {
-      caret.x = 100
+      caret.x = PARAGRAPH_PADDING
       caret.y = y
       break
     }
@@ -409,7 +416,7 @@ export function moveAfterWrite(props: MoverProps): Object {
 export function moveAfterDelete(props: MoverProps): Object {
   const p = document.querySelectorAll('.paragraph')[props.pindex] as HTMLElement
   if (props.length(props.pindex, props.sindex) === 0) {
-    const caret = { offset: 0, x: 100, y: p.offsetTop }
+    const caret = { offset: 0, x: PARAGRAPH_PADDING, y: p.offsetTop }
     return {
       caret,
       pindex: props.pindex,
@@ -429,7 +436,7 @@ export function moveAfterDelete(props: MoverProps): Object {
   }
 }
 
-export function moveAfterNewLine(props: MoverProps): Object {
+export function moveAfterNewline(props: MoverProps): Object {
   const pindex = props.pindex + 1
   const sindex = 0
 
@@ -441,6 +448,6 @@ export function moveAfterNewLine(props: MoverProps): Object {
     return { caret, pindex, sindex, direction: undefined }
   }
 
-  const caret = { offset: 0, x: 100, y: p.offsetTop }
+  const caret = { offset: 0, x: PARAGRAPH_PADDING, y: p.offsetTop }
   return { caret, pindex, sindex, direction: undefined }
 }

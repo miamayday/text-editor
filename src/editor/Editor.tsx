@@ -144,7 +144,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
         state = CaretMover.moveAfterDelete(props)
         break
       case Direction.NewLine:
-        state = CaretMover.moveAfterNewLine(props)
+        state = CaretMover.moveAfterNewline(props)
         break
     }
 

@@ -1,7 +1,7 @@
 /* Helper functions used by Writer.tsx */
 
 import * as Coords from './Coords'
-import { TextNode } from '../Types'
+import { TextNode, MoverProps, Direction } from '../Types'
 
 export function incrementOffset(
   initialOffset: number,
@@ -81,6 +81,89 @@ export function decrementOffset(
   } else {
     // reach start of document
     return null
+  }
+}
+
+export function increment(props: MoverProps): {
+  offset: number
+  pindex: number
+  sindex: number
+} | null {
+  let offset = props.caret.offset + 1
+  let pindex = props.pindex
+  let sindex = props.sindex
+
+  if (offset <= props.length(pindex, sindex)) {
+    return { offset, pindex, sindex }
+  } else {
+    // go to next span
+    offset = 1
+    sindex++
+  }
+
+  if (sindex < props.spanCount(pindex)) {
+    return { offset, pindex, sindex }
+  } else {
+    // go to next paragraph
+    pindex++
+    sindex = 0
+    offset = 0
+  }
+
+  if (pindex < props.pCount) {
+    return { offset, pindex, sindex }
+  } else {
+    // reach end of document
+    return null
+  }
+}
+
+export function decrement(props: MoverProps): {
+  offset: number
+  pindex: number
+  sindex: number
+} | null {
+  let offset = props.caret.offset - 1
+  let pindex = props.pindex
+  let sindex = props.sindex
+
+  if (offset >= 1 || (offset >= 0 && sindex === 0)) {
+    return { offset, pindex, sindex }
+  } else {
+    // go to previous span
+    sindex--
+  }
+
+  if (sindex >= 0) {
+    offset = props.length(pindex, sindex)
+    return { offset, pindex, sindex }
+  } else {
+    // go to previous paragraph
+    pindex--
+  }
+
+  if (pindex >= 0) {
+    sindex = props.spanCount(pindex) - 1
+    offset = props.length(pindex, sindex)
+    return { offset, pindex, sindex }
+  } else {
+    // reach start of document
+    return null
+  }
+}
+
+export function nextPosition(
+  left: boolean,
+  props: MoverProps
+): {
+  offset: number
+  pindex: number
+  sindex: number
+} | null {
+  if (left) {
+    return decrement(props)
+  } else {
+    return increment(props)
   }
 }
 
