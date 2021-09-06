@@ -148,7 +148,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
         break
     }
 
-    this.setState({ ...this.state, ...state })
+    this.setState({ ...this.state, ...state, direction: undefined })
   }
 
   /**

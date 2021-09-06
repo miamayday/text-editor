@@ -1,7 +1,9 @@
 /* Helper functions used by Writer.tsx */
 
 import * as Coords from './Coords'
-import { TextNode, MoverProps, Direction } from '../Types'
+import { TextNode, MoverProps, Style, Caret } from '../Types'
+
+const PARAGRAPH_PADDING = 100
 
 export function incrementOffset(
   initialOffset: number,
@@ -165,6 +167,14 @@ export function nextPosition(
   } else {
     return increment(props)
   }
+}
+
+export function getStyle(node: HTMLElement): Style {
+  const style: Style = {
+    bold: node.style.fontWeight === 'bold',
+    italic: node.style.fontStyle === 'italic'
+  }
+  return style
 }
 
 function binOffset(

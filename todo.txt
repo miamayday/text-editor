@@ -1,5 +1,6 @@
-1. selection...
-2. coord static number related config
+selection...
+coord static number related config
+fix up mover mess
 
 rich editing
 footer
