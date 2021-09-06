@@ -1,7 +1,5 @@
 /* Document */
 
-import React from 'react'
-
 export type Style = {
   bold: boolean
   italic: boolean
@@ -53,6 +51,12 @@ export type EditorState = {
   pindex?: number
   sindex?: number
   paragraphs: Array<Array<TextNode>>
+}
+
+export type Position = {
+  caret: Caret
+  pindex: number
+  sindex: number
 }
 
 /* Caret */

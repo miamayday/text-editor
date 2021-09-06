@@ -10,7 +10,8 @@ import {
   Command,
   SetterProps,
   MoverProps,
-  WriterProps
+  WriterProps,
+  Position
 } from './Types'
 import * as CaretSetter from './caret/Setter'
 import * as CaretMover from './caret/Mover'
@@ -122,33 +123,37 @@ class Editor extends React.Component<EditorProps, EditorState> {
       pCount: this.state.paragraphs.length
     }
 
-    let state
+    let position: Position = {
+      caret: this.state.caret,
+      pindex: this.state.pindex,
+      sindex: this.state.sindex
+    }
 
     switch (this.state.direction) {
       case Direction.Up:
-        state = CaretMover.moveUp(props)
+        position = CaretMover.moveUp(props)
         break
       case Direction.Right:
-        state = CaretMover.moveRight(props)
+        position = CaretMover.moveRight(props)
         break
       case Direction.Down:
-        state = CaretMover.moveDown(props)
+        position = CaretMover.moveDown(props)
         break
       case Direction.Left:
-        state = CaretMover.moveLeft(props)
+        position = CaretMover.moveLeft(props)
         break
       case Direction.Write:
-        state = CaretMover.moveAfterWrite(props)
+        position = CaretMover.moveAfterWrite(props)
         break
       case Direction.Delete:
-        state = CaretMover.moveAfterDelete(props)
+        position = CaretMover.moveAfterDelete(props)
         break
       case Direction.NewLine:
-        state = CaretMover.moveAfterNewline(props)
+        position = CaretMover.moveAfterNewline(props)
         break
     }
 
-    this.setState({ ...this.state, ...state, direction: undefined })
+    this.setState({ ...this.state, ...position, direction: undefined })
   }
 
   /**
