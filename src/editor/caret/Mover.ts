@@ -1,13 +1,107 @@
 /* Caret movement with arrow keys */
 
 import * as Coords from './Coords'
-import { MoverProps, Position } from '../Types'
+import { MoverProps, Position, Caret } from '../Types'
 import { nextPosition, incrementOffset, decrementOffset } from './Helper'
+import { getPositionOfLineAndCharacter } from 'typescript'
 
 const PARAGRAPH_PADDING = 100
 const CARET_HEIGHT = 20
 const LINE_HEIGHT = 34
 const ADJUST_Y = (LINE_HEIGHT - CARET_HEIGHT) / 2
+
+function checkOldPosition(props: MoverProps): Caret | null {
+  const p = document.querySelectorAll('.paragraph')[props.pindex] as HTMLElement
+  const span = p.children[props.sindex] as HTMLElement
+  const [realX, realY] = Coords.getCoords(span, props.caret.offset)
+  if (realY !== props.caret.y) {
+    console.log('> fix to end')
+    // coords have been manipulated
+    // meaning we're at the start of a line
+    // because start offset == prev end offset
+
+    // now fix to end of prev line
+    return {
+      offset: props.caret.offset,
+      x: realX,
+      y: realY
+    }
+  }
+  return null
+}
+
+export function moveHorizontal(left: boolean, props: MoverProps) {
+  left ? console.log('move left') : console.log('move right')
+
+  const pos: Position = {
+    caret: { ...props.caret }, // remove reference to object
+    pindex: props.pindex,
+    sindex: props.sindex
+  }
+
+  const output = nextPosition(left, props)
+  if (output === null) {
+    left ? console.log('end of document') : console.log('start of document')
+    return pos
+  }
+
+  pos.caret.offset = output.offset
+  pos.pindex = output.pindex
+  pos.sindex = output.sindex
+  const p = document.querySelectorAll('.paragraph')[pos.pindex] as HTMLElement
+
+  // next position is empty paragraph
+  if (props.length(pos.pindex, pos.sindex) === 0) {
+    pos.caret.x = PARAGRAPH_PADDING
+    pos.caret.y = p.offsetTop + ADJUST_Y
+    return pos
+  }
+
+  // check old position if going left
+  if (left && props.length(props.pindex, props.sindex) !== 0) {
+    const caret = checkOldPosition(props)
+    if (caret !== null) {
+      pos.caret = caret
+      return pos
+    }
+  }
+
+  // next position is span (text node) with text
+  const span = p.children[pos.sindex] as HTMLElement
+  ;[pos.caret.x, pos.caret.y] = Coords.getCoords(span, pos.caret.offset)
+
+  // check if next position is on the next line
+  if (pos.pindex === props.pindex && props.caret.x !== PARAGRAPH_PADDING) {
+    // same paragraph, fetch old coordinates
+    const oldSpan = p.children[props.sindex]
+    const oldY = Coords.getCoords(oldSpan, props.caret.offset)[1]
+
+    // next position is on the next line
+    if (oldY !== pos.caret.y) {
+      console.log('> fix to start')
+      pos.caret.x = PARAGRAPH_PADDING
+      if (left) {
+        pos.caret.y = props.caret.y
+      } else {
+        // same offset must repeat for endline and startline
+        pos.caret.offset--
+      }
+      return pos
+    }
+  }
+
+  return pos
+}
+
+/* * * * * * * * * * * * * * SCRAPS * * * * * * * * * * * * * */
+
+/* * * * * * * * * * * * * * SCRAPS * * * * * * * * * * * * * */
+
+/* * * * * * * * * * * * * * SCRAPS * * * * * * * * * * * * * */
+
+/* * * * * * * * * * * * * * SCRAPS * * * * * * * * * * * * * */
+
+/* * * * * * * * * * * * * * SCRAPS * * * * * * * * * * * * * */
 
 export function moveRight(props: MoverProps): Position {
   console.log('move right')
@@ -53,6 +147,8 @@ export function moveRight(props: MoverProps): Position {
     // same paragraph, fetch old coordinates
     const oldSpan = p.children[props.sindex]
     const oldCoords = Coords.getCoords(oldSpan, props.caret.offset)
+
+    console.log(oldCoords[1], 'vs', y)
 
     // next position is on the next line
     if (oldCoords[1] !== y) {

@@ -134,13 +134,13 @@ class Editor extends React.Component<EditorProps, EditorState> {
         position = CaretMover.moveUp(props)
         break
       case Direction.Right:
-        position = CaretMover.moveRight(props)
+        position = CaretMover.moveHorizontal(false, props)
         break
       case Direction.Down:
         position = CaretMover.moveDown(props)
         break
       case Direction.Left:
-        position = CaretMover.moveLeft(props)
+        position = CaretMover.moveHorizontal(true, props)
         break
       case Direction.Write:
         position = CaretMover.moveAfterWrite(props)
