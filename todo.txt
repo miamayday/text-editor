@@ -8,6 +8,7 @@ immutability with this.state?
 moveup/down errors
 
 !!ERROR WHEN PRESSING FIRST CHARACTER OF A SPAN!! (right in the middle)
+fixed?
 
 ! removes undefined/null
 ? adds undefined or sth

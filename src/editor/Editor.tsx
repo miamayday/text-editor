@@ -332,6 +332,9 @@ class Editor extends React.Component<EditorProps, EditorState> {
         pCount: this.state.paragraphs.length
       }
 
+      console.log('event.clientX:', event.clientX)
+      //console.log('event.clientY:', event.clientY)
+
       if (el.className === 'text-node') {
         this.setCaretForSpan(props)
       } else if (el.className === 'paragraph') {

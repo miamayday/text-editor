@@ -29,6 +29,8 @@ function fixToNearestSpan(
   const cont = d.getBoundingClientRect()
 
   const caret: Caret = { offset, x: 0, y: 0 }
+  const mouse: Mouse = { x: 0, y: 0 }
+  let fixMouse = false
 
   const outOfBounds = checkBounds(
     p,
@@ -58,7 +60,10 @@ function fixToNearestSpan(
         caret.x = config.PARAGRAPH_PADDING
         caret.y = rect.top - cont.top + d.scrollTop
 
-        const mouse: Mouse = { x: cont.left + config.PARAGRAPH_PADDING, y }
+        const mouse: Mouse = {
+          x: cont.left + config.PARAGRAPH_PADDING,
+          y
+        }
         return { caret, mouse, sindex: si }
       } else if (y > clickY) {
         console.log('already past y')
@@ -81,6 +86,7 @@ function fixToNearestSpan(
     if (node.text.length === 0) {
       // happens with empty paragraphs
       console.log('empty paragraph')
+      fixMouse = true
       const x = cont.left + config.PARAGRAPH_PADDING
       const y = p.offsetTop + cont.top + d.scrollTop
       const diff = Math.sqrt(Math.pow(clickX - x, 2) + Math.pow(clickY - y, 2))
@@ -123,7 +129,13 @@ function fixToNearestSpan(
     }
   }
 
-  const mouse: Mouse = { x: bestX, y: bestY }
+  mouse.x = bestX
+  mouse.y = bestY
+
+  if (fixMouse) {
+    mouse.y = bestY + config.ADJUST_Y
+  }
+
   return { caret, mouse, sindex: bestSindex }
 }
 
@@ -166,14 +178,54 @@ export function setCaretForSpan(
   editor: EditorState,
   props: SetterProps
 ): Object | null {
-  const attrPindex = props.el.getAttribute('p-index')
-  const attrSindex = props.el.getAttribute('s-index')
+  let span = props.el
+  const attrPindex = span.getAttribute('p-index')
+  const attrSindex = span.getAttribute('s-index')
   if (attrPindex !== null && attrSindex !== null) {
     let pindex = Number(attrPindex)
     let sindex = Number(attrSindex)
 
-    const [x, y] = Coords.getCoords(props.el, props.offset)
-    const caret = { offset: props.offset, x, y }
+    const caret = { offset: props.offset, x: 0, y: 0 }
+
+    let realX = 0
+    if (props.el.parentElement !== null) {
+      const parent = props.el.parentElement
+      console.log('parent:', parent)
+      const bounds = parent.getBoundingClientRect()
+      console.log('bounds:', bounds)
+      realX = props.x - bounds.left
+    }
+
+    console.log('real.x:', realX)
+    console.log('props.x:', props.x)
+
+    let bestDiff = Number.MAX_VALUE
+
+    if (props.offset <= props.length(pindex, sindex)) {
+      ;[caret.x, caret.y] = Coords.getCoords(span, props.offset)
+      console.log('caret.x:', caret.x)
+      bestDiff = Math.abs(caret.x - realX)
+      console.log('bestDiff:', bestDiff)
+    }
+
+    if (sindex > 0 && props.offset <= props.length(pindex, sindex - 1)) {
+      if (span.previousSibling !== null) {
+        const prevSpan = span.previousSibling as HTMLElement
+        const [prevX, prevY] = Coords.getCoords(prevSpan, props.offset)
+        console.log('prev.x:', prevX)
+        const diff = Math.abs(prevX - realX)
+        if (diff <= bestDiff) {
+          console.log('> fix inaccuracies')
+          caret.x = prevX
+          caret.y = prevY
+          sindex--
+        }
+      }
+    }
+
+    /*console.log('offset:', props.offset)
+    console.log('pindex:', pindex)
+    console.log('sindex:', sindex)*/
 
     const p = document.querySelectorAll('.paragraph')[pindex]
     const arr = editor.paragraphs[pindex]
