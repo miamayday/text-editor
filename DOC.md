@@ -1,20 +1,12 @@
 This is a text editor made with React and Typescript. WIP.
 
-## Project structure
+## Notes
 
 ```
-/src
-  /editor
-    /caret
-      Coords.ts
-      Helper.ts
-      Mover.ts    // Moves caret (arrow keys)
-      Setter.ts   // Sets caret position
-    Editor.tsx
-    Types.tsx
-    Writer.tsx
-  App.tsx
+ADJUST_Y = (LINE_HEIGHT - CARET_HEIGHT) / 2
 ```
+
+## Project structure
 
 App.tsx loads the Editor from Editor.tsx.
 

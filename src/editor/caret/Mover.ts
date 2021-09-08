@@ -3,11 +3,7 @@
 import * as Coords from './Coords'
 import { MoverProps, Position, Caret } from '../Types'
 import { nextPosition } from './Helper'
-
-const PARAGRAPH_PADDING = 100
-const CARET_HEIGHT = 20
-const LINE_HEIGHT = 34
-const ADJUST_Y = (LINE_HEIGHT - CARET_HEIGHT) / 2
+import config from '../../config'
 
 function checkOldPosition(props: MoverProps): Caret | null {
   const p = document.querySelectorAll('.paragraph')[props.pindex] as HTMLElement
@@ -62,8 +58,8 @@ export function moveHorizontal(left: boolean, props: MoverProps): Position {
 
   // next position is empty paragraph
   if (props.length(pos.pindex, pos.sindex) === 0) {
-    pos.caret.x = PARAGRAPH_PADDING
-    pos.caret.y = p.offsetTop + ADJUST_Y
+    pos.caret.x = config.PARAGRAPH_PADDING
+    pos.caret.y = p.offsetTop + config.ADJUST_Y
     return pos
   }
 
@@ -81,7 +77,10 @@ export function moveHorizontal(left: boolean, props: MoverProps): Position {
   ;[pos.caret.x, pos.caret.y] = Coords.getCoords(span, pos.caret.offset)
 
   // check if next position is on the next line
-  if (pos.pindex === props.pindex && props.caret.x !== PARAGRAPH_PADDING) {
+  if (
+    pos.pindex === props.pindex &&
+    props.caret.x !== config.PARAGRAPH_PADDING
+  ) {
     // same paragraph, fetch old coordinates
     const oldSpan = p.children[props.sindex]
     const oldY = Coords.getCoords(oldSpan, props.caret.offset)[1]
@@ -89,7 +88,7 @@ export function moveHorizontal(left: boolean, props: MoverProps): Position {
     // next position is on the next line
     if (oldY !== pos.caret.y) {
       console.log('> fix to start')
-      pos.caret.x = PARAGRAPH_PADDING
+      pos.caret.x = config.PARAGRAPH_PADDING
       if (left) {
         pos.caret.y = props.caret.y
       } else {
@@ -165,8 +164,8 @@ export function moveVertical(up: boolean, props: MoverProps): Position {
       // empty paragraph
       if (props.length(output.pindex, output.sindex) === 0) {
         pos.caret.offset = 0
-        pos.caret.x = PARAGRAPH_PADDING
-        pos.caret.y = p.offsetTop + ADJUST_Y
+        pos.caret.x = config.PARAGRAPH_PADDING
+        pos.caret.y = p.offsetTop + config.ADJUST_Y
         pos.pindex = output.pindex
         pos.sindex = output.sindex
         return pos
@@ -184,7 +183,7 @@ export function moveVertical(up: boolean, props: MoverProps): Position {
 
     if (!up && y !== pos.caret.y) {
       console.log('> fix to start')
-      pos.caret.x = PARAGRAPH_PADDING
+      pos.caret.x = config.PARAGRAPH_PADDING
       pos.caret.y = y
       break
     }
@@ -213,7 +212,7 @@ export function moveVertical(up: boolean, props: MoverProps): Position {
     if (output === null) {
       if (up) {
         pos.caret.offset = 0
-        pos.caret.x = PARAGRAPH_PADDING
+        pos.caret.x = config.PARAGRAPH_PADDING
         pos.sindex = 0
       }
       break
@@ -230,7 +229,7 @@ export function moveVertical(up: boolean, props: MoverProps): Position {
     if (y !== pos.caret.y) {
       if (up) {
         pos.caret.offset = output.offset
-        pos.caret.x = PARAGRAPH_PADDING
+        pos.caret.x = config.PARAGRAPH_PADDING
         pos.sindex = output.sindex
       }
       break
@@ -277,7 +276,11 @@ export function moveAfterWrite(props: MoverProps): Position {
 export function moveAfterDelete(props: MoverProps): Position {
   const p = document.querySelectorAll('.paragraph')[props.pindex] as HTMLElement
   if (props.length(props.pindex, props.sindex) === 0) {
-    const caret = { offset: 0, x: PARAGRAPH_PADDING, y: p.offsetTop + ADJUST_Y }
+    const caret = {
+      offset: 0,
+      x: config.PARAGRAPH_PADDING,
+      y: p.offsetTop + config.ADJUST_Y
+    }
     return {
       caret,
       pindex: props.pindex,
@@ -307,6 +310,10 @@ export function moveAfterNewline(props: MoverProps): Position {
     return { caret, pindex, sindex }
   }
 
-  const caret = { offset: 0, x: PARAGRAPH_PADDING, y: p.offsetTop + ADJUST_Y }
+  const caret = {
+    offset: 0,
+    x: config.PARAGRAPH_PADDING,
+    y: p.offsetTop + config.ADJUST_Y
+  }
   return { caret, pindex, sindex }
 }
