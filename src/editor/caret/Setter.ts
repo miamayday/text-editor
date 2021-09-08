@@ -53,9 +53,6 @@ function fixToNearestSpan(
       const rect = Coords.getRectFromRange(span.childNodes[0], nextOffset)
       const y = rect.top
 
-      console.log('rect.top:', y)
-      console.log('clickY:', clickY)
-
       if (y <= clickY && clickY <= y + config.CARET_HEIGHT) {
         // on the same line
         caret.x = config.PARAGRAPH_PADDING

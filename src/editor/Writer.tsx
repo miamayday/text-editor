@@ -4,6 +4,14 @@ function stylesMatch(s1: Style, s2: Style): Boolean {
   return s1.bold === s2.bold && s1.italic === s2.italic
 }
 
+/**
+ * Writes one character in the current position.
+ *
+ * @param props Caret position and paragraphs
+ * @param key Character to be written
+ * @param style Styling of the text node
+ * @returns New state and a Direction
+ */
 export function Write(
   props: WriterProps,
   key: string,

@@ -7,5 +7,7 @@ scroll pushing when caret moves out of view
 immutability with this.state?
 moveup/down errors
 
+!!ERROR WHEN PRESSING FIRST CHARACTER OF A SPAN!! (right in the middle)
+
 ! removes undefined/null
 ? adds undefined or sth

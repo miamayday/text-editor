@@ -86,14 +86,6 @@ export function nextPosition(
   }
 }
 
-export function getStyle(node: HTMLElement): Style {
-  const style: Style = {
-    bold: node.style.fontWeight === 'bold',
-    italic: node.style.fontStyle === 'italic'
-  }
-  return style
-}
-
 function binOffset(
   span: Element,
   node: TextNode,
