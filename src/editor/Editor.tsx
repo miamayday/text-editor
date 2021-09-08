@@ -97,7 +97,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
   /* Caret navigation */
 
   /**
-   * Calls the Mover to move the caret to the current Direction.
+   * Calls the Mover to move the caret in the current Direction.
    *
    * @see Mover.ts
    */
@@ -153,7 +153,9 @@ class Editor extends React.Component<EditorProps, EditorState> {
         break
     }
 
-    this.setState({ ...this.state, ...position, direction: undefined })
+    const style = this.state.paragraphs[position.pindex][position.sindex].style
+
+    this.setState({ ...this.state, ...position, style, direction: undefined })
   }
 
   /**

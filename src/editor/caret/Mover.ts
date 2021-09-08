@@ -2,7 +2,7 @@
 
 import * as Coords from './Coords'
 import { MoverProps, Position, Caret } from '../Types'
-import { nextPosition, incrementOffset, decrementOffset } from './Helper'
+import { nextPosition } from './Helper'
 
 const PARAGRAPH_PADDING = 100
 const CARET_HEIGHT = 20
