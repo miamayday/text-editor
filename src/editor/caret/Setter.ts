@@ -187,7 +187,13 @@ export function setCaretForSpan(
 
     const caret = { offset: props.offset, x: 0, y: 0 }
 
-    let realX = 0
+    // known error: user clicks between two spans
+    // > focusOffset is given correctly in the event
+    // > element is not always given correctly
+    // focusOffset may correspond to the previous element
+    // this is why left node must be checked also
+
+    let realX = 0 // x coordinate relative to the paragraph
     if (props.el.parentElement !== null) {
       const parent = props.el.parentElement
       console.log('parent:', parent)
@@ -210,11 +216,12 @@ export function setCaretForSpan(
 
     if (sindex > 0 && props.offset <= props.length(pindex, sindex - 1)) {
       if (span.previousSibling !== null) {
-        const prevSpan = span.previousSibling as HTMLElement
+        const prevSpan = span.previousSibling as HTMLElement // left node
         const [prevX, prevY] = Coords.getCoords(prevSpan, props.offset)
         console.log('prev.x:', prevX)
         const diff = Math.abs(prevX - realX)
         if (diff <= bestDiff) {
+          // left node pos is closer to cursor
           console.log('> fix inaccuracies')
           caret.x = prevX
           caret.y = prevY
@@ -222,10 +229,6 @@ export function setCaretForSpan(
         }
       }
     }
-
-    /*console.log('offset:', props.offset)
-    console.log('pindex:', pindex)
-    console.log('sindex:', sindex)*/
 
     const p = document.querySelectorAll('.paragraph')[pindex]
     const arr = editor.paragraphs[pindex]
