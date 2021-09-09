@@ -53,12 +53,6 @@ export type EditorState = {
   paragraphs: Array<Array<TextNode>>
 }
 
-export type Position = {
-  caret: Caret
-  pindex: number
-  sindex: number
-}
-
 /* Caret */
 
 export interface SetterProps {
@@ -80,11 +74,10 @@ export interface MoverProps {
   pCount: number
 }
 
-export interface MoveState {
+export type Position = {
   caret: Caret
   pindex: number
   sindex: number
-  direction?: Direction
 }
 
 /* Writer */

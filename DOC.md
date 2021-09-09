@@ -1,10 +1,10 @@
 This is a text editor made with React and Typescript. WIP.
 
-## Notes
+## Components
 
-```
-ADJUST_Y = (LINE_HEIGHT - CARET_HEIGHT) / 2
-```
+- Setter: Sets the caret closest to where user clicked.
+- Mover: Moves the caret according to arrow keys.
+- Writer: Writes a character to the current position, inserts a newline, or deletes content.
 
 ## Project structure
 

@@ -167,10 +167,17 @@ class Editor extends React.Component<EditorProps, EditorState> {
   setCaretForSpan(props: SetterProps): void {
     console.log('set caret for span', props.el)
 
-    const newState = CaretSetter.setCaretForSpan(this.state, props)
-    if (newState !== null) {
-      this.setState({ ...this.state, ...newState })
+    if (
+      props.el.getAttribute('p-index') === null ||
+      props.el.getAttribute('s-index') === null
+    ) {
+      // not a valid text node
+      return
     }
+
+    const position = CaretSetter.setCaretForSpan(this.state, props)
+    const style = this.state.paragraphs[position.pindex][position.sindex].style
+    this.setState({ ...this.state, ...position, style, direction: undefined })
   }
 
   /**
@@ -182,10 +189,14 @@ class Editor extends React.Component<EditorProps, EditorState> {
   setCaretForParagraph(props: SetterProps): void {
     console.log('set caret for paragraph', props.el)
 
-    const newState = CaretSetter.setCaretForParagraph(this.state, props)
-    if (newState !== null) {
-      this.setState({ ...this.state, ...newState })
+    if (props.el.getAttribute('p-index') === null) {
+      // not a valid paragraph
+      return
     }
+
+    const position = CaretSetter.setCaretForParagraph(this.state, props)
+    const style = this.state.paragraphs[position.pindex][position.sindex].style
+    this.setState({ ...this.state, ...position, style, direction: undefined })
   }
 
   /* Editing */
