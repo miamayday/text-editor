@@ -173,11 +173,7 @@ export function setCaretForSpan(
   props: SetterProps
 ): Position {
   const pos: Position = {
-    caret: {
-      offset: props.offset,
-      x: 0,
-      y: 0
-    },
+    caret: { offset: props.offset, x: 0, y: 0 },
     pindex: 0,
     sindex: 0
   }

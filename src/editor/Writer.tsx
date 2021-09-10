@@ -22,65 +22,68 @@ export function Write(
   paragraphs: Array<Array<TextNode>>
   direction: Direction
 } {
-  const caret = { ...props.caret }
-  let sindex = props.sindex
-  const paragraphs = props.paragraphs
-  const paragraph = props.paragraphs[props.pindex]
-  const node = paragraph[sindex]
-  if (stylesMatch(node.style, style)) {
-    const text = [
-      node.text.slice(0, caret.offset),
-      key,
-      node.text.slice(caret.offset)
-    ].join('')
-    node.text = text
-    caret.offset++
-  } else {
-    console.log('styles are different')
-    if (sindex + 1 < paragraph.length && caret.offset === node.text.length) {
-      const next = paragraph[sindex + 1]
-      if (stylesMatch(next.style, style)) {
-        // merge with next node
-        console.log('merge with next node')
-        const next = paragraph[sindex + 1]
-        const text = [next.text.slice(0, 1), key, next.text.slice(1)].join('')
-        paragraph[sindex + 1].text = text
-        caret.offset = 1
-        sindex++
-      } else {
-        // insert new node with different style
-        console.log('insert new node with different style')
-        const newNode: TextNode = { style, text: key }
-        paragraph.splice(sindex + 1, 0, newNode)
-        caret.offset = 1
-        sindex++
-      }
-    } else if (caret.offset < node.text.length) {
-      // split the current node and insert new
-      console.log('split the current node and insert new')
-      const text = node.text
-      const head = text.slice(0, caret.offset)
-      const tail = text.slice(caret.offset)
-
-      const rightNode: TextNode = { style: node.style, text: tail }
-      const newNode: TextNode = { style, text: key }
-
-      node.text = head
-      paragraph.splice(sindex + 1, 0, newNode)
-      paragraph.splice(sindex + 2, 0, rightNode)
-      caret.offset = 1
-      sindex++
-    } else {
-      // add new node to the end
-      console.log('add new node to the end')
-      const newNode: TextNode = { style, text: key }
-      paragraph.push(newNode)
-      caret.offset = 1
-      sindex++
-    }
+  const out = {
+    caret: { ...props.caret },
+    sindex: props.sindex,
+    paragraphs: props.paragraphs,
+    direction: Direction.Write
   }
 
-  return { caret, sindex, paragraphs, direction: Direction.Write }
+  const paragraph = props.paragraphs[props.pindex]
+  const node = paragraph[props.sindex]
+
+  if (stylesMatch(node.style, style)) {
+    const text = [
+      node.text.slice(0, out.caret.offset),
+      key, // add new character
+      node.text.slice(out.caret.offset)
+    ].join('')
+    node.text = text
+    out.caret.offset++
+    return out
+  }
+
+  console.log('styles are different')
+
+  const newNode: TextNode = { style, text: key }
+
+  if (
+    out.sindex + 1 < paragraph.length &&
+    out.caret.offset === node.text.length
+  ) {
+    const next = paragraph[out.sindex + 1]
+    if (stylesMatch(next.style, style)) {
+      // merge with next node
+      console.log('merge with next node')
+      const next = paragraph[out.sindex + 1]
+      const text = [next.text.slice(0, 1), key, next.text.slice(1)].join('')
+      paragraph[out.sindex + 1].text = text // update next node
+    } else {
+      // insert new node with different style
+      console.log('insert new node with different style')
+      paragraph.splice(out.sindex + 1, 0, newNode)
+    }
+  } else if (out.caret.offset < node.text.length) {
+    // split the current node and insert new
+    console.log('split the current node and insert new')
+    const text = node.text
+    const head = text.slice(0, out.caret.offset)
+    const tail = text.slice(out.caret.offset)
+
+    const rightNode: TextNode = { style: node.style, text: tail }
+
+    node.text = head
+    paragraph.splice(out.sindex + 1, 0, newNode)
+    paragraph.splice(out.sindex + 2, 0, rightNode)
+  } else {
+    // add new node to the end
+    console.log('add new node to the end')
+    paragraph.push(newNode)
+  }
+
+  out.caret.offset = 1
+  out.sindex++
+  return out
 }
 
 export function Delete(props: WriterProps): Object | null {
