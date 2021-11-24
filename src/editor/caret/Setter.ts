@@ -1,15 +1,12 @@
-/* Caret positioning to nearest character */
+/* This file contains functionality for positioning the caret
+   to the nearest character relative to cursor position.
+   Horrible, horrible things happen here! */
 
 import * as Coords from './Coords'
-import {
-  TextNode,
-  Caret,
-  Mouse,
-  Position,
-  EditorState,
-  SetterProps
-} from '../Types'
+import { TextNode, Position, EditorState, SetterProps } from '../Types'
 import config from '../../config'
+
+// TODO: Clean up the code, look for possible issues
 
 /**
  * Fixes the caret to the nearest span element (text node) in the paragraph.
@@ -74,8 +71,6 @@ function fixToNearestSpan(
     }
   }
 
-  let bestX = Number.MAX_VALUE
-  let bestY = Number.MAX_VALUE
   let bestDiff = Number.MAX_VALUE
   let bestSindex = 0
 
@@ -91,8 +86,6 @@ function fixToNearestSpan(
       const y = p.offsetTop + cont.top + d.scrollTop
       const diff = Math.sqrt(Math.pow(clickX - x, 2) + Math.pow(clickY - y, 2))
       if (diff < bestDiff) {
-        bestX = x
-        bestY = y
         bestDiff = diff
         bestSindex = 0
         pos.caret.x = config.PARAGRAPH_PADDING
@@ -119,8 +112,6 @@ function fixToNearestSpan(
 
       const diff = Math.sqrt(Math.pow(clickX - x, 2) + Math.pow(clickY - y, 2))
       if (diff < bestDiff) {
-        bestX = x
-        bestY = y
         bestDiff = diff
         bestSindex = sindex
         pos.caret.x = rect.left - cont.left

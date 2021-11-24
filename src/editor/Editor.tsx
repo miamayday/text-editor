@@ -1,9 +1,10 @@
 import React from 'react'
+// Toolbar icons
 import { ReactComponent as BoldIcon } from '../assets/bold.svg'
 import { ReactComponent as ItalicIcon } from '../assets/italic.svg'
+// Interfaces, types, enums
 import {
   Style,
-  TextNode,
   EditorProps,
   EditorState,
   Direction,
@@ -13,39 +14,12 @@ import {
   WriterProps,
   Position
 } from './Types'
+// Functionality for caret navigation and editing
 import * as CaretSetter from './caret/Setter'
 import * as CaretMover from './caret/Mover'
 import * as Writer from './Writer'
-
-const bold: Style = { bold: true, italic: false }
-const italic: Style = { bold: false, italic: true }
-const normal: Style = { bold: false, italic: false }
-const n1: TextNode = { style: normal, text: 'This is an example text with ' }
-const n2: TextNode = { style: bold, text: 'bold' }
-const n3: TextNode = { style: normal, text: ' and ' }
-const n4: TextNode = { style: italic, text: 'italic' }
-const n5: TextNode = {
-  style: normal,
-  text: ' test. elements. This is the se co   nd line of the first paragraph.'
-}
-const n6: TextNode = { style: normal, text: '' }
-const n7: TextNode = {
-  style: italic,
-  text: 'This is another paragraph with text.'
-}
-const n8: TextNode = { style: normal, text: '' }
-const n9: TextNode = {
-  style: normal,
-  text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus placerat eleifend iaculis. Morbi orci urna, tristique in auctor id, ultrices sed neque. Suspendisse eget neque orci. Cras sed tempor nulla. Sed congue arcu id suscipit viverra. Vestibulum sit amet commodo erat. Sed egestas blandit ex, eget suscipit diam semper non. Sed id sagittis purus. Aenean placerat sapien id ultrices congue. Morbi congue lorem sed felis molestie, id porta justo pellentesque.'
-}
-
-const examples: Array<Array<TextNode>> = [
-  [n1, n2, n3, n4, n5],
-  //[n6],
-  [n7],
-  [n8],
-  [n9]
-]
+// Example paragraphs
+import { examples } from './Examples'
 
 class Editor extends React.Component<EditorProps, EditorState> {
   constructor(props: EditorProps) {
@@ -66,6 +40,11 @@ class Editor extends React.Component<EditorProps, EditorState> {
   }
 
   componentDidUpdate(): void {
+    // Two important attributes:
+    // - this.state.direction: Indicates a change to the caret
+    // - this.state.command: Indicates a change to the paragraphs
+    // Only one of the attributes can be defined at a time.
+    // Prequisite for either event is that the caret has been set.
     if (this.state.direction !== undefined) {
       this.moveCaret()
     } else if (this.state.command !== undefined) {
@@ -73,33 +52,11 @@ class Editor extends React.Component<EditorProps, EditorState> {
     }
   }
 
-  /* Stylers */
-
-  nodeToCSSProps(style: Style): React.CSSProperties {
-    const props: React.CSSProperties = {
-      fontWeight: style.bold ? 'bold' : 'normal',
-      fontStyle: style.italic ? 'italic' : 'normal'
-    }
-    return props
-  }
-
-  caretToCSSProps(): React.CSSProperties {
-    if (this.state.caret !== undefined) {
-      return {
-        left: this.state.caret.x + 'px',
-        top: this.state.caret.y + 'px'
-      }
-    } else {
-      return {}
-    }
-  }
-
-  /* Caret navigation */
+  /* CARET NAVIGATION */
 
   /**
    * Calls the Mover to move the caret in the current Direction.
-   *
-   * @see Mover.ts
+   * @see Mover.ts in /caret
    */
   moveCaret(): void {
     if (
@@ -160,20 +117,11 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
   /**
    * Calls the Setter to set the caret within the clicked span (text node).
-   *
-   * @see setCaretForSpan function in Setter.ts
+   * @see setCaretForSpan function in caret/Setter.ts
    * @param props Information related to the position of the cursor and the editor state.
    */
   setCaretForSpan(props: SetterProps): void {
     console.log('set caret for span', props.el)
-
-    if (
-      props.el.getAttribute('p-index') === null ||
-      props.el.getAttribute('s-index') === null
-    ) {
-      // not a valid text node
-      return
-    }
 
     const position = CaretSetter.setCaretForSpan(this.state, props)
     const style = this.state.paragraphs[position.pindex][position.sindex].style
@@ -182,28 +130,21 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
   /**
    * Calls the Setter to set the caret within the clicked paragraph.
-   *
-   * @see setCaretForParagraph function in Setter.ts
+   * @see setCaretForParagraph function in caret/Setter.ts
    * @param props Information related to the position of the cursor and the editor state.
    */
   setCaretForParagraph(props: SetterProps): void {
     console.log('set caret for paragraph', props.el)
-
-    if (props.el.getAttribute('p-index') === null) {
-      // not a valid paragraph
-      return
-    }
 
     const position = CaretSetter.setCaretForParagraph(this.state, props)
     const style = this.state.paragraphs[position.pindex][position.sindex].style
     this.setState({ ...this.state, ...position, style, direction: undefined })
   }
 
-  /* Editing */
+  /* EDITING (writing, deleting, inserting a newline) */
 
   /**
    * Call the Writer to execute one of the three commands: Write, Delete, Newline.
-   *
    * @see Writer.tsx
    */
   executeCommand(): void {
@@ -243,10 +184,16 @@ class Editor extends React.Component<EditorProps, EditorState> {
     this.setState({ command: undefined })
   }
 
-  /* Event handlers */
+  /* EVENT HANDLERS */
 
+  /**
+   * Handles a key down event.
+   *
+   * May set this.state.direction or this.state.command depending on the key code.
+   * @param event onKeyDown event on div.app
+   */
   handleKeyDown(event: React.KeyboardEvent): void {
-    //event.preventDefault()
+    event.preventDefault()
 
     switch (event.key) {
       case 'ArrowUp':
@@ -274,6 +221,97 @@ class Editor extends React.Component<EditorProps, EditorState> {
     }
   }
 
+  /**
+   * Handles a mouse click event on the document.
+   *
+   * Sets the caret depending on where the user clicks. Different procedures
+   * are used for text nodes and paragraphs.
+   * @param event onClick event on div.document
+   */
+  handleClick(event: React.MouseEvent): void {
+    event.preventDefault()
+
+    if (event.target instanceof HTMLElement) {
+      const el = event.target
+
+      // Check that element is of class 'text-node' or 'paragraph'
+      if (!el.className) {
+        return // Nothing to do here
+      } else if (el.className === 'caret') {
+        console.log('clicked on caret')
+        return // Rare occurence
+      } else if (el.className !== 'text-node' && el.className !== 'paragraph') {
+        console.log('clicked on unknown element')
+        // TODO: Should the caret be vanished in this case?
+        this.setState({
+          caret: undefined,
+          direction: undefined,
+          pindex: undefined,
+          sindex: undefined
+        })
+        return
+      }
+
+      // Check that element contains 'p-index' attribute
+      // * p-index: Paragraph index
+      // This is a must for both text nodes and paragraphs
+      if (el.getAttribute('p-index') === null) {
+        console.warn(
+          "Attribute 'p-index' missing. See that the paragraphs are rendered correctly."
+        )
+        return
+      }
+
+      // Get offset from selection
+      // This is crucial for calculating the caret position
+      // * Documentation: https://developer.mozilla.org/en-US/docs/Web/API/Selection/focusOffset
+      const offset = window.getSelection()?.focusOffset
+      if (offset === undefined) {
+        return // Nothing can be done without offset
+      }
+
+      console.log('focusOffset:', offset)
+      console.log('event.clientX:', event.clientX)
+      console.log('event.clientY:', event.clientY)
+
+      // TODO: Is this too much information to be passed around?
+      const props: SetterProps = {
+        el,
+        offset,
+        x: event.clientX,
+        y: event.clientY,
+        length: (pindex: number, sindex: number) => {
+          return this.state.paragraphs[pindex][sindex].text.length
+        },
+        spanCount: (pindex: number) => {
+          return this.state.paragraphs[pindex].length
+        },
+        pCount: this.state.paragraphs.length
+      }
+
+      // The clicked element is either a text node (span element)
+      // or paragraph (p element)
+      if (el.className === 'text-node') {
+        // Check that the span element contains 's-index' attribute
+        // * s-index: Span index
+        // This is only required for text nodes
+        if (el.getAttribute('s-index') === null) {
+          console.warn(
+            "Attribute 's-index' missing. See that the paragraphs are rendered correctly."
+          )
+          return
+        }
+        this.setCaretForSpan(props)
+      } else if (el.className === 'paragraph') {
+        this.setCaretForParagraph(props)
+      }
+    }
+  }
+
+  /**
+   * Vanishes the caret, since the user clicked outside the document.
+   * @param event onClick event on div.app
+   */
   handleClickOutside(event: React.MouseEvent): void {
     event.preventDefault()
 
@@ -292,68 +330,9 @@ class Editor extends React.Component<EditorProps, EditorState> {
   }
 
   /**
-   * Handles a mouse click event on the document.
-   *
-   * Sets the caret depending on where the user clicks. Different procedures
-   * are used for text nodes and paragraphs.
+   * Toggles bold styling.
+   * @param event onClick event on the bold toolbar icon
    */
-  handleClick(event: React.MouseEvent): void {
-    event.preventDefault()
-
-    if (event.target instanceof HTMLElement) {
-      const el = event.target
-
-      if (el.className) {
-        if (el.className === 'caret') {
-          console.log('clicked on caret')
-          return
-        } else if (
-          el.className !== 'text-node' &&
-          el.className !== 'paragraph'
-        ) {
-          console.log('clicked on middle ground')
-          this.setState({
-            caret: undefined,
-            direction: undefined,
-            pindex: undefined,
-            sindex: undefined
-          })
-          return
-        }
-      }
-
-      const offset = window.getSelection()?.focusOffset
-      if (offset === undefined) {
-        return
-      }
-
-      console.log('focusOffset:', offset)
-
-      const props: SetterProps = {
-        el,
-        offset,
-        x: event.clientX,
-        y: event.clientY,
-        length: (pindex: number, sindex: number) => {
-          return this.state.paragraphs[pindex][sindex].text.length
-        },
-        spanCount: (pindex: number) => {
-          return this.state.paragraphs[pindex].length
-        },
-        pCount: this.state.paragraphs.length
-      }
-
-      console.log('event.clientX:', event.clientX)
-      //console.log('event.clientY:', event.clientY)
-
-      if (el.className === 'text-node') {
-        this.setCaretForSpan(props)
-      } else if (el.className === 'paragraph') {
-        this.setCaretForParagraph(props)
-      }
-    }
-  }
-
   handleBoldClick(event: React.MouseEvent): void {
     event.preventDefault()
     this.setState({
@@ -361,11 +340,45 @@ class Editor extends React.Component<EditorProps, EditorState> {
     })
   }
 
+  /**
+   * Toggles italic styling.
+   * @param event onClick event on the italic toolbar icon
+   */
   handleItalicClick(event: React.MouseEvent): void {
     event.preventDefault()
     this.setState({
       style: { ...this.state.style, italic: !this.state.style.italic }
     })
+  }
+
+  /* STYLERS FOR TEXT NODES AND THE CARET */
+
+  /**
+   * Converts the style of a text node into CSS properties.
+   * @param style  Style of a text node
+   * @returns Corresponding CSS properties
+   */
+  nodeToCSSProps(style: Style): React.CSSProperties {
+    const props: React.CSSProperties = {
+      fontWeight: style.bold ? 'bold' : 'normal',
+      fontStyle: style.italic ? 'italic' : 'normal'
+    }
+    return props
+  }
+
+  /**
+   * Converts caret coordinates into CSS properties.
+   * @returns Left and top values for the caret
+   */
+  caretToCSSProps(): React.CSSProperties {
+    if (this.state.caret !== undefined) {
+      return {
+        left: this.state.caret.x + 'px',
+        top: this.state.caret.y + 'px'
+      }
+    } else {
+      return {}
+    }
   }
 
   render() {
@@ -374,18 +387,9 @@ class Editor extends React.Component<EditorProps, EditorState> {
         className="app"
         onClick={this.handleClickOutside}
         onKeyDown={this.handleKeyDown}
-        tabIndex={0}
+        tabIndex={0} // TODO: Needed?
       >
         <div className="editor">
-          {this.state.mouse && (
-            <div
-              className="mouse"
-              style={{
-                left: this.state.mouse.x + 'px',
-                top: this.state.mouse.y + 'px'
-              }}
-            ></div>
-          )}
           <div className="toolbar">
             <BoldIcon
               className={
