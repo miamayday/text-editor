@@ -193,7 +193,16 @@ class Editor extends React.Component<EditorProps, EditorState> {
    * @param event onKeyDown event on div.app
    */
   handleKeyDown(event: React.KeyboardEvent): void {
-    event.preventDefault()
+    // Do not event.preventDefault()
+    // Otherwise developer tools won't open
+
+    if (
+      this.state.caret === undefined ||
+      this.state.pindex === undefined ||
+      this.state.sindex === undefined
+    ) {
+      return // Do nothing if caret has not been set
+    }
 
     switch (event.key) {
       case 'ArrowUp':
@@ -355,7 +364,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
   /**
    * Converts the style of a text node into CSS properties.
-   * @param style  Style of a text node
+   * @param style Style of a text node
    * @returns Corresponding CSS properties
    */
   nodeToCSSProps(style: Style): React.CSSProperties {
