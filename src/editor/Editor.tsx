@@ -116,27 +116,27 @@ class Editor extends React.Component<EditorProps, EditorState> {
   }
 
   /**
-   * Calls the Setter to set the caret within the clicked span (text node).
-   * @see setCaretForSpan function in caret/Setter.ts
-   * @param props Information related to the position of the cursor and the editor state.
+   * Calls the Setter to calculate the caret position.
+   * @see setCaret function in caret/Setter.ts
    */
-  setCaretForSpan(props: SetterProps): void {
-    console.log('set caret for span', props.el)
-
-    const position = CaretSetter.setCaretForSpan(this.state, props)
-    const style = this.state.paragraphs[position.pindex][position.sindex].style
-    this.setState({ ...this.state, ...position, style, direction: undefined })
-  }
-
-  /**
-   * Calls the Setter to set the caret within the clicked paragraph.
-   * @see setCaretForParagraph function in caret/Setter.ts
-   * @param props Information related to the position of the cursor and the editor state.
-   */
-  setCaretForParagraph(props: SetterProps): void {
-    console.log('set caret for paragraph', props.el)
-
-    const position = CaretSetter.setCaretForParagraph(this.state, props)
+  setCaret(
+    el: HTMLElement,
+    offset: number,
+    clickX: number,
+    clickY: number,
+    pindex: number,
+    sindex: number = 0
+  ): void {
+    // TODO: props
+    const position = CaretSetter.calculateCaretPosition(
+      this.state,
+      el,
+      offset,
+      clickX,
+      clickY,
+      pindex,
+      sindex
+    )
     const style = this.state.paragraphs[position.pindex][position.sindex].style
     this.setState({ ...this.state, ...position, style, direction: undefined })
   }
@@ -193,8 +193,14 @@ class Editor extends React.Component<EditorProps, EditorState> {
    * @param event onKeyDown event on div.app
    */
   handleKeyDown(event: React.KeyboardEvent): void {
-    // Do not event.preventDefault()
-    // Otherwise developer tools won't open
+    console.log(`Pressed '${event.key}'`)
+
+    // These cause problems otherwise
+    // Firefox may still act up TODO:
+    const avoid = ['ArrowUp', 'ArrowDown', ' ']
+    if (avoid.includes(event.key)) {
+      event.preventDefault()
+    }
 
     if (
       this.state.caret === undefined ||
@@ -247,11 +253,10 @@ class Editor extends React.Component<EditorProps, EditorState> {
       if (!el.className) {
         return // Nothing to do here
       } else if (el.className === 'caret') {
-        console.log('clicked on caret')
+        console.log('Clicked on caret')
         return // Rare occurence
       } else if (el.className !== 'text-node' && el.className !== 'paragraph') {
-        console.log('clicked on unknown element')
-        // TODO: Should the caret be vanished in this case?
+        console.log('Clicked on unknown element')
         this.setState({
           caret: undefined,
           direction: undefined,
@@ -264,12 +269,14 @@ class Editor extends React.Component<EditorProps, EditorState> {
       // Check that element contains 'p-index' attribute
       // * p-index: Paragraph index
       // This is a must for both text nodes and paragraphs
-      if (el.getAttribute('p-index') === null) {
+      const attrPindex = el.getAttribute('p-index')
+      if (attrPindex === null) {
         console.warn(
           "Attribute 'p-index' missing. See that the paragraphs are rendered correctly."
         )
         return
       }
+      const pindex = Number(attrPindex)
 
       // Get offset from selection
       // This is crucial for calculating the caret position
@@ -279,41 +286,24 @@ class Editor extends React.Component<EditorProps, EditorState> {
         return // Nothing can be done without offset
       }
 
-      console.log('focusOffset:', offset)
-      console.log('event.clientX:', event.clientX)
-      console.log('event.clientY:', event.clientY)
-
-      // TODO: Is this too much information to be passed around?
-      const props: SetterProps = {
-        el,
-        offset,
-        x: event.clientX,
-        y: event.clientY,
-        length: (pindex: number, sindex: number) => {
-          return this.state.paragraphs[pindex][sindex].text.length
-        },
-        spanCount: (pindex: number) => {
-          return this.state.paragraphs[pindex].length
-        },
-        pCount: this.state.paragraphs.length
-      }
-
+      let sindex = undefined
       // The clicked element is either a text node (span element)
       // or paragraph (p element)
       if (el.className === 'text-node') {
         // Check that the span element contains 's-index' attribute
         // * s-index: Span index
         // This is only required for text nodes
-        if (el.getAttribute('s-index') === null) {
+        const attrSindex = el.getAttribute('s-index')
+        if (attrSindex === null) {
           console.warn(
             "Attribute 's-index' missing. See that the paragraphs are rendered correctly."
           )
           return
         }
-        this.setCaretForSpan(props)
-      } else if (el.className === 'paragraph') {
-        this.setCaretForParagraph(props)
+        sindex = Number(attrSindex)
       }
+
+      this.setCaret(el, offset, event.clientX, event.clientY, pindex, sindex)
     }
   }
 
@@ -396,7 +386,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
         className="app"
         onClick={this.handleClickOutside}
         onKeyDown={this.handleKeyDown}
-        tabIndex={0} // TODO: Needed?
+        tabIndex={0} // Cannot write otherwise
       >
         <div className="editor">
           <div className="toolbar">

@@ -8,7 +8,8 @@ scroll pushing when caret moves out of view
 immutability with this.state?
 moveup/down errors
 
-when clicking something for the first time it might write
-
 ! removes undefined/null
 ? adds undefined or sth
+
+should style change when clicking on a text node that
+has a different style from the toolbar style?
