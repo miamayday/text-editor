@@ -122,18 +122,17 @@ class Editor extends React.Component<EditorProps, EditorState> {
   setCaret(
     el: HTMLElement,
     offset: number,
-    clickX: number,
-    clickY: number,
+    clientX: number,
+    clientY: number,
     pindex: number,
     sindex: number = 0
   ): void {
-    // TODO: props
     const position = CaretSetter.calculateCaretPosition(
-      this.state,
+      this.state.paragraphs,
       el,
       offset,
-      clickX,
-      clickY,
+      clientX,
+      clientY,
       pindex,
       sindex
     )

@@ -1,63 +1,40 @@
 /* This file contains functionality for positioning the caret
    to the nearest character relative to cursor position.
-   Horrible, horrible things happen here! */
+   
+   Rules:
+   - Use HTMLElement
+   - Use the coordinate system relative to the document */
 
 import * as Coords from './Coords'
-import { Position, EditorState } from '../Types'
+import { Position, TextNode } from '../Types'
+import { moveOffset } from './Helper'
 import config from '../../config'
 
-// TODO: Helper
-function incrementOffset(
-  editor: EditorState,
-  pos: Position
-): {
-  offset: number
-  pindex: number
-  sindex: number
-} | null {
-  let offset = pos.caret.offset + 1
-  let pindex = pos.pindex
-  let sindex = pos.sindex
-
-  if (offset <= editor.paragraphs[pindex][sindex].text.length) {
-    return { offset, pindex, sindex }
-  } else {
-    // Go to next span
-    offset = 1
-    sindex++
-  }
-
-  if (sindex < editor.paragraphs[pindex].length) {
-    return { offset, pindex, sindex }
-  } else {
-    // Go to next paragraph
-    pindex++
-    sindex = 0
-    offset = 0
-  }
-
-  if (pindex < editor.paragraphs.length) {
-    return { offset, pindex, sindex }
-  } else {
-    // Reach end of document
-    return null
-  }
-}
-
+/**
+ * Checks whether the current offset repeats for the next position.
+ *
+ * Modifies the given Position object to represent the position closer to cursor.
+ * @param paragraphs Paragraphs in the editor
+ * @param pos Current position
+ * @param p Paragraph HTML element
+ * @param mouseX Mouse x coordinate relative to the document
+ * @param mouseY Mouse y coordinate relative to the document
+ * @returns
+ */
 function checkOffsetRepeat(
-  editor: EditorState,
+  paragraphs: Array<Array<TextNode>>,
   pos: Position,
-  p: Element,
+  p: HTMLElement,
   mouseX: number,
   mouseY: number
-) {
+): number {
   const currSpan = p.children[pos.sindex]
   const [currX, currY] = Coords.getDocumentCoords(currSpan, pos.caret.offset)
   const currDist = Math.sqrt(
     Math.pow(currX - mouseX, 2) + Math.pow(currY - mouseY, 2)
   )
 
-  const nextPos = incrementOffset(editor, pos)
+  const nextPos = moveOffset(false, paragraphs, pos)
   if (nextPos !== null) {
     const nextSpan = p.children[nextPos.sindex]
     let [nextX, nextY] = Coords.getDocumentCoords(nextSpan, nextPos.offset)
@@ -81,25 +58,24 @@ function checkOffsetRepeat(
   return currDist
 }
 
+/**
+ * Modifies the given Position object to represent the new caret position.
+ * @param pos Default position
+ * @param paragraphs Paragraphs in the editor
+ * @param el Span HTML element
+ * @param offset focusOffset
+ * @param mouseX Mouse x coordinate relative to the document
+ * @param mouseY Mouse y coordinate relative to the document
+ */
 function calculateForSpan(
   pos: Position,
-  editor: EditorState,
+  paragraphs: Array<Array<TextNode>>,
   el: HTMLElement,
   offset: number,
-  clickX: number,
-  clickY: number
+  mouseX: number,
+  mouseY: number
 ): void {
   console.log('Set caret for span:', el)
-  console.log('focusOffset:', offset)
-
-  // The document which contains the paragraph elements
-  const d = document.querySelectorAll('.document')[0]
-  // The bounds of the document relative to the viewport
-  const cont = d.getBoundingClientRect()
-
-  // Mouse coordinates relative to the document
-  const mouseX = clickX - cont.left
-  const mouseY = clickY - cont.top + d.scrollTop
 
   // Consider a situation where the user clicks between
   // two consequtive spans. You get an element and an offset.
@@ -108,12 +84,12 @@ function calculateForSpan(
   // to the previous span.
 
   // Paragraph as an element
-  const p = document.querySelectorAll('.paragraph')[pos.pindex]
+  const p = document.querySelectorAll('.paragraph')[pos.pindex] as HTMLElement
 
   // Keep track of the shortest distance to cursor position
   let shortestDist = Number.MAX_VALUE
 
-  if (offset <= editor.paragraphs[pos.pindex][pos.sindex].text.length) {
+  if (offset <= paragraphs[pos.pindex][pos.sindex].text.length) {
     // Calculate caret position relative to the document
     ;[pos.caret.x, pos.caret.y] = Coords.getDocumentCoords(el, offset)
     // Calculate distance to the cursor position
@@ -122,7 +98,7 @@ function calculateForSpan(
 
   if (
     pos.sindex > 0 &&
-    offset <= editor.paragraphs[pos.pindex][pos.sindex - 1].text.length
+    offset <= paragraphs[pos.pindex][pos.sindex - 1].text.length
   ) {
     if (el.previousSibling !== null) {
       const prevSpan = el.previousSibling as HTMLElement
@@ -159,37 +135,34 @@ function calculateForSpan(
 
   // To correct this, check whether the user clicked at the start.
 
-  checkOffsetRepeat(editor, pos, p, mouseX, mouseY)
+  checkOffsetRepeat(paragraphs, pos, p, mouseX, mouseY)
 }
 
+/**
+ * Modifies the given Position object to represent the new caret position.
+ * @param pos Default position
+ * @param paragraphs Paragraphs in the editor
+ * @param el Paragraph HTML element
+ * @param offset focusOffset
+ * @param mouseX Mouse x coordinate relative to the document
+ * @param mouseY Mouse y coordinate relative to the document
+ */
 function calculateForParagraph(
   pos: Position,
-  editor: EditorState,
+  paragraphs: Array<Array<TextNode>>,
   el: HTMLElement,
   offset: number,
-  clickX: number,
-  clickY: number
+  mouseX: number,
+  mouseY: number
 ): void {
   console.log('Set caret for paragraph:', el)
-  console.log('focusOffset:', offset)
-  // TODO: Clean up the implementation
-
-  // The document which contains the paragraphs
-  const d = document.querySelectorAll('.document')[0]
-  // The bounds of the document relative to the viewport
-  const cont = d.getBoundingClientRect()
-
-  // Mouse coordinates relative to the document
-  const mouseX = clickX - cont.left
-  const mouseY = clickY - cont.top + d.scrollTop
 
   // The paragraph as an element
   const p = document.querySelectorAll('.paragraph')[pos.pindex] as HTMLElement
   // The paragraph as an array
-  const arr = editor.paragraphs[pos.pindex]
+  const arr = paragraphs[pos.pindex]
 
   // Check for empty paragraph
-
   if (arr[0].text.length === 0) {
     console.log('Paragraph is empty')
     pos.caret.x = config.PARAGRAPH_PADDING
@@ -233,7 +206,7 @@ function calculateForParagraph(
       }
 
       // Check border case
-      const dist = checkOffsetRepeat(editor, newPos, p, mouseX, mouseY)
+      const dist = checkOffsetRepeat(paragraphs, newPos, p, mouseX, mouseY)
       if (dist < shortestDistance) {
         console.log('New best candidate:', candidate)
         shortestDistance = dist
@@ -247,14 +220,22 @@ function calculateForParagraph(
 }
 
 export function calculateCaretPosition(
-  editor: EditorState,
+  paragraphs: Array<Array<TextNode>>,
   el: HTMLElement,
   offset: number,
-  clickX: number,
-  clickY: number,
+  clientX: number,
+  clientY: number,
   pindex: number,
   sindex: number
 ): Position {
+  // The document element which contains the paragraphs
+  const d = document.querySelectorAll('.document')[0]
+  // The bounds of the document relative to the viewport
+  const cont = d.getBoundingClientRect()
+  // Mouse coordinates relative to the document
+  const mouseX = clientX - cont.left
+  const mouseY = clientY - cont.top + d.scrollTop
+
   const pos: Position = {
     caret: { offset, x: 0, y: 0 },
     pindex,
@@ -262,11 +243,12 @@ export function calculateCaretPosition(
   }
 
   console.log('\n * * * CARET SETTING * * * \n\n')
+  console.log('focusOffset:', offset)
 
   if (el.className === 'text-node') {
-    calculateForSpan(pos, editor, el, offset, clickX, clickY)
+    calculateForSpan(pos, paragraphs, el, offset, mouseX, mouseY)
   } else if (el.className === 'paragraph') {
-    calculateForParagraph(pos, editor, el, offset, clickX, clickY)
+    calculateForParagraph(pos, paragraphs, el, offset, mouseX, mouseY)
   }
 
   return pos
