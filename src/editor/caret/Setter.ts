@@ -2,13 +2,38 @@
    to the nearest character relative to cursor position.
    
    Rules:
-   - Use HTMLElement
-   - Use the coordinate system relative to the document */
+   - Use HTMLElement instead of Element
+   - Use the coordinate system relative to the document
+     * Caret position in CSS is calculated this way
+   
+   Main function calculateCaretPosition is at the bottom. */
 
 import * as Coords from './Coords'
 import { Position, TextNode } from '../Types'
 import { moveOffset } from './Helper'
 import config from '../../config'
+
+enum Distance {
+  X,
+  Y,
+  Euclidean
+}
+
+function calculateDistance(
+  method: Distance,
+  mouseX: number,
+  mouseY: number,
+  x: number,
+  y: number
+) {
+  if (method === Distance.X) {
+    return Math.abs(mouseX - x)
+  } else if (method === Distance.Y) {
+    return Math.abs(mouseY - y)
+  } else {
+    return Math.sqrt(Math.pow(mouseX - x, 2) + Math.pow(mouseY - y, 2))
+  }
+}
 
 /**
  * Checks whether the current offset repeats for the next position.
@@ -19,20 +44,19 @@ import config from '../../config'
  * @param p Paragraph HTML element
  * @param mouseX Mouse x coordinate relative to the document
  * @param mouseY Mouse y coordinate relative to the document
- * @returns
+ * @returns Shortest distance to the cursor position
  */
 function checkOffsetRepeat(
   paragraphs: Array<Array<TextNode>>,
   pos: Position,
   p: HTMLElement,
   mouseX: number,
-  mouseY: number
+  mouseY: number,
+  method: Distance
 ): number {
   const currSpan = p.children[pos.sindex]
   const [currX, currY] = Coords.getDocumentCoords(currSpan, pos.caret.offset)
-  const currDist = Math.sqrt(
-    Math.pow(currX - mouseX, 2) + Math.pow(currY - mouseY, 2)
-  )
+  const currDist = calculateDistance(method, mouseX, mouseY, currX, currY)
 
   const nextPos = moveOffset(false, paragraphs, pos)
   if (nextPos !== null) {
@@ -43,16 +67,16 @@ function checkOffsetRepeat(
     // of the current position and next position
     if (currY !== nextY) {
       nextX = config.PARAGRAPH_PADDING
-      const nextDist = Math.sqrt(
-        Math.pow(nextX - mouseX, 2) + Math.pow(nextY - mouseY, 2)
-      )
+      const nextDist = calculateDistance(method, mouseX, mouseY, nextX, nextY)
       if (nextDist < currDist) {
+        console.log('Choose next')
         pos.caret.x = nextX
         pos.caret.y = nextY
         return nextDist
       }
     }
   }
+  console.log('Keep current')
   pos.caret.x = currX
   pos.caret.y = currY
   return currDist
@@ -135,7 +159,7 @@ function calculateForSpan(
 
   // To correct this, check whether the user clicked at the start.
 
-  checkOffsetRepeat(paragraphs, pos, p, mouseX, mouseY)
+  checkOffsetRepeat(paragraphs, pos, p, mouseX, mouseY, Distance.X)
 }
 
 /**
@@ -192,11 +216,12 @@ function calculateForParagraph(
   }*/
 
   let shortestDistance = Number.MAX_VALUE
-  let candidate = 0
+  let candidate = 0 // The span index of a candidate
   while (candidate < arr.length) {
     const node = arr[candidate]
+    // A candidate must contain the offset
     if (offset <= node.text.length) {
-      // Calculate distance from cursor position to candidate
+      // Calculate candidate position
       const span = p.children[candidate]
       const [newX, newY] = Coords.getDocumentCoords(span, offset)
       const newPos: Position = {
@@ -204,9 +229,16 @@ function calculateForParagraph(
         pindex: pos.pindex,
         sindex: candidate
       }
-
-      // Check border case
-      const dist = checkOffsetRepeat(paragraphs, newPos, p, mouseX, mouseY)
+      // Calculate distance to cursor position + check border case
+      const dist = checkOffsetRepeat(
+        paragraphs,
+        newPos,
+        p,
+        mouseX,
+        mouseY,
+        Distance.Euclidean
+      )
+      // Check if new candidate is closer
       if (dist < shortestDistance) {
         console.log('New best candidate:', candidate)
         shortestDistance = dist
@@ -228,7 +260,7 @@ export function calculateCaretPosition(
   pindex: number,
   sindex: number
 ): Position {
-  // The document element which contains the paragraphs
+  // The document element which contains the paragraph elements
   const d = document.querySelectorAll('.document')[0]
   // The bounds of the document relative to the viewport
   const cont = d.getBoundingClientRect()
