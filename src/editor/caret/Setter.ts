@@ -202,9 +202,6 @@ function seekLine(
   let candidate = start
   let increment = Math.sign(end - start)
 
-  let upper = 0
-  let lower = 0
-
   /* Seek y */
 
   const invalid = end + increment
@@ -238,9 +235,9 @@ function seekLine(
         // Check if new candidate is on the correct line
         // * Inclusive upper limit
         // * Exclusive lower limit
-        upper = candidatePos.caret.y - config.ADJUST_Y
-        lower = upper + config.LINE_HEIGHT
-        if (mouseY >= upper && mouseY < lower) {
+        const upperLimit = candidatePos.caret.y - config.ADJUST_Y
+        const lowerLimit = upperLimit + config.LINE_HEIGHT
+        if (mouseY >= upperLimit && mouseY < lowerLimit) {
           console.log('Found correct line')
           break
         }
