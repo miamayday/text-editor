@@ -1,4 +1,5 @@
-/* Caret movement with arrow keys */
+/* This file contains functionality for positioning the caret
+   to the next position according to arrow keys. */
 
 import * as Coords from './Coords'
 import { MoverProps, Position, Caret } from '../Types'

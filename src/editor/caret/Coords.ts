@@ -1,6 +1,6 @@
-/* Helpful functions for computing caret coordinates */
+/* This file contains helpful functionality for computing caret coordinates. */
 
-export function calcMiddle(x1: number, x2: number) {
+export function calcMiddle(x1: number, x2: number): number {
   return x1 + (x2 - x1) / 2
 }
 
