@@ -229,6 +229,7 @@ function seekLine(
       if (dist < shortestDistance) {
         console.log('New best candidate:', candidate)
         shortestDistance = dist
+        pos.caret.offset = offset
         pos.caret.x = candidatePos.caret.x
         pos.caret.y = candidatePos.caret.y
         pos.sindex = candidate
@@ -298,6 +299,7 @@ function seekPosition(
       if (dist < shortestDistance) {
         console.log('New best candidate:', candidate)
         shortestDistance = dist
+        pos.caret.offset = offset
         pos.caret.x = candidatePos.caret.x
         pos.caret.y = candidatePos.caret.y
         pos.sindex = candidate
