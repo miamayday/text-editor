@@ -1,5 +1,9 @@
 /* This file contains helpful functionality for computing caret coordinates. */
 
+export function getParagraphElement(pindex: number): HTMLElement {
+  return document.querySelectorAll('.paragraph')[pindex] as HTMLElement
+}
+
 export function calcMiddle(x1: number, x2: number): number {
   return x1 + (x2 - x1) / 2
 }

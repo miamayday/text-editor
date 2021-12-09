@@ -7,7 +7,9 @@
      * If the next is a new paragraph: reset offset
    - When moving from start of line to the end of previous:
      * If the previous is a new span: repeat offset
-     * If the previous is a new paragraph: set offset to end of previous */
+     * If the previous is a new paragraph: set offset to end of previous
+   
+   Main function calculateCaretPosition is at the bottom. */
 
 import * as Coords from './Coords'
 import { Position, Caret, TextNode, Direction } from '../Types'
@@ -61,10 +63,6 @@ function moveAfterNewline(
   pos.caret.y = p.offsetTop + config.ADJUST_Y
 }
 
-function getParagraphElement(pindex: number): HTMLElement {
-  return document.querySelectorAll('.paragraph')[pindex] as HTMLElement
-}
-
 function calculateHorizontal(
   left: boolean,
   paragraphs: Array<Array<TextNode>>,
@@ -81,7 +79,7 @@ function calculateHorizontal(
   // Next position is an empty paragraph
   if (paragraphs[nextPos.pindex][nextPos.sindex].text.length === 0) {
     console.log('Empty paragraph')
-    const p = getParagraphElement(nextPos.pindex)
+    const p = Coords.getParagraphElement(nextPos.pindex)
     pos.caret.x = config.PARAGRAPH_PADDING
     pos.caret.y = p.offsetTop + config.ADJUST_Y
     pos.caret.offset = nextPos.offset
@@ -90,7 +88,7 @@ function calculateHorizontal(
     return
   }
 
-  let p = getParagraphElement(nextPos.pindex)
+  let p = Coords.getParagraphElement(nextPos.pindex)
   let span = p.children[nextPos.sindex]
   const [nextX, nextY] = Coords.getDocumentCoords(span, nextPos.offset)
 
@@ -107,7 +105,7 @@ function calculateHorizontal(
 
   // Check current position for offset repeat
   if (paragraphs[pos.pindex][pos.sindex].text.length > 0) {
-    p = getParagraphElement(pos.pindex)
+    p = Coords.getParagraphElement(pos.pindex)
     span = p.children[pos.sindex]
     const [x, y] = Coords.getDocumentCoords(span, pos.caret.offset)
     if (left && y !== pos.caret.y) {
@@ -183,12 +181,15 @@ class OffsetIterator {
   }
 }
 
+/**
+ * Seeks the next line when moving up/down with arrow keys.
+ */
 function seekLine(
   up: boolean,
   paragraphs: Array<Array<TextNode>>,
   pos: Position
 ) {
-  let p = getParagraphElement(pos.pindex)
+  let p = Coords.getParagraphElement(pos.pindex)
   let span = p.children[pos.sindex]
 
   const originalY = pos.caret.y
@@ -215,7 +216,7 @@ function seekLine(
 
     if (nextPos.pindex !== pos.pindex) {
       // New paragraph
-      p = getParagraphElement(nextPos.pindex)
+      p = Coords.getParagraphElement(nextPos.pindex)
       span = p.children[nextPos.sindex] as HTMLElement
       // Empty paragraph
       if (paragraphs[nextPos.pindex][nextPos.sindex].text.length === 0) {
@@ -249,13 +250,16 @@ function seekLine(
   }
 }
 
+/**
+ * Seeks the position closest to original caret position with respect to x.
+ */
 function seekPosition(
   up: boolean,
   paragraphs: Array<Array<TextNode>>,
   pos: Position,
   originalX: number
 ) {
-  let p = getParagraphElement(pos.pindex)
+  let p = Coords.getParagraphElement(pos.pindex)
   let span = p.children[pos.sindex]
 
   /* Seek x */

@@ -35,10 +35,6 @@ function calculateDistance(
   }
 }
 
-function getParagraphElement(pindex: number): HTMLElement {
-  return document.querySelectorAll('.paragraph')[pindex] as HTMLElement
-}
-
 /**
  * Checks whether the current offset repeats for the next position.
  *
@@ -61,7 +57,7 @@ function checkOffsetRepeat(
   // Fix y coordinate to center of line for better results
   const CENTER_Y = config.CARET_HEIGHT / 2
 
-  const p = getParagraphElement(pos.pindex)
+  const p = Coords.getParagraphElement(pos.pindex)
 
   const currSpan = p.children[pos.sindex]
   const [currX, currY] = Coords.getDocumentCoords(currSpan, pos.caret.offset)
@@ -195,7 +191,7 @@ function seekLine(
   start: number,
   end: number
 ): void {
-  const p = getParagraphElement(pos.pindex)
+  const p = Coords.getParagraphElement(pos.pindex)
   const arr = paragraphs[pos.pindex]
 
   let shortestDistance = Number.MAX_VALUE
@@ -260,7 +256,7 @@ function seekPosition(
   start: number,
   end: number
 ): void {
-  const p = getParagraphElement(pos.pindex)
+  const p = Coords.getParagraphElement(pos.pindex)
   const arr = paragraphs[pos.pindex]
 
   let shortestDistance = Number.MAX_VALUE
@@ -331,7 +327,7 @@ function calculateForParagraph(
   console.log('Set caret for paragraph:', el)
 
   // Selected paragraph as an HTML element
-  const p = getParagraphElement(pos.pindex)
+  const p = Coords.getParagraphElement(pos.pindex)
   // Selected paragraph as an array of text nodes
   const arr = paragraphs[pos.pindex]
 
