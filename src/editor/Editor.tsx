@@ -9,8 +9,6 @@ import {
   EditorState,
   Direction,
   Command,
-  SetterProps,
-  MoverProps,
   WriterProps,
   Position
 } from './Types'
@@ -55,69 +53,35 @@ class Editor extends React.Component<EditorProps, EditorState> {
   /* CARET NAVIGATION */
 
   /**
-   * Calls the Mover to move the caret in the current Direction.
-   * @see Mover.ts in /caret
+   * Calls the Mover to calculate a new position for the caret.
+   * @see moveHorizontal function in caret/Mover.ts
+   * @see moveVertical function in caret/Mover.ts
    */
   moveCaret(): void {
     if (
       this.state.caret === undefined ||
       this.state.pindex === undefined ||
-      this.state.sindex === undefined
+      this.state.sindex === undefined ||
+      this.state.direction === undefined
     ) {
       return
     }
 
-    const props: MoverProps = {
-      caret: this.state.caret,
-      pindex: this.state.pindex,
-      sindex: this.state.sindex,
-      length: (pindex: number, sindex: number) => {
-        return this.state.paragraphs[pindex][sindex].text.length
-      },
-      spanCount: (pindex: number) => {
-        return this.state.paragraphs[pindex].length
-      },
-      pCount: this.state.paragraphs.length
-    }
+    const pos: Position = CaretMover.calculateCaretPosition(
+      this.state.direction,
+      this.state.paragraphs,
+      this.state.caret,
+      this.state.pindex,
+      this.state.sindex
+    )
 
-    let position: Position = {
-      caret: this.state.caret,
-      pindex: this.state.pindex,
-      sindex: this.state.sindex
-    }
-
-    switch (this.state.direction) {
-      case Direction.Up:
-        position = CaretMover.moveVertical(true, props)
-        break
-      case Direction.Right:
-        position = CaretMover.moveHorizontal(false, props)
-        break
-      case Direction.Down:
-        position = CaretMover.moveVertical(false, props)
-        break
-      case Direction.Left:
-        position = CaretMover.moveHorizontal(true, props)
-        break
-      case Direction.Write:
-        position = CaretMover.moveAfterWrite(props)
-        break
-      case Direction.Delete:
-        position = CaretMover.moveAfterDelete(props)
-        break
-      case Direction.NewLine:
-        position = CaretMover.moveAfterNewline(props)
-        break
-    }
-
-    const style = this.state.paragraphs[position.pindex][position.sindex].style
-
-    this.setState({ ...this.state, ...position, style, direction: undefined })
+    const style = this.state.paragraphs[pos.pindex][pos.sindex].style
+    this.setState({ ...this.state, ...pos, style, direction: undefined })
   }
 
   /**
    * Calls the Setter to calculate the caret position.
-   * @see setCaret function in caret/Setter.ts
+   * @see calculateCaretPosition function in caret/Setter.ts
    */
   setCaret(
     el: HTMLElement,
@@ -127,7 +91,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
     pindex: number,
     sindex: number = 0
   ): void {
-    const position = CaretSetter.calculateCaretPosition(
+    const pos: Position = CaretSetter.calculateCaretPosition(
       this.state.paragraphs,
       el,
       offset,
@@ -136,8 +100,8 @@ class Editor extends React.Component<EditorProps, EditorState> {
       pindex,
       sindex
     )
-    const style = this.state.paragraphs[position.pindex][position.sindex].style
-    this.setState({ ...this.state, ...position, style, direction: undefined })
+    const style = this.state.paragraphs[pos.pindex][pos.sindex].style
+    this.setState({ ...this.state, ...pos, style, direction: undefined })
   }
 
   /* EDITING (writing, deleting, inserting a newline) */
@@ -164,7 +128,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
     switch (this.state.command) {
       case Command.Write:
-        console.log('write', this.state.key)
+        console.log('Write', this.state.key)
         if (this.state.key) {
           this.setState(Writer.Write(props, this.state.key, this.state.style))
         }

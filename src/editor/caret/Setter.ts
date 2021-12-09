@@ -337,7 +337,7 @@ function calculateForParagraph(
 
   // Check for empty paragraph
   if (arr[0].text.length === 0) {
-    console.log('Paragraph is empty')
+    console.log('Empty paragraph')
     pos.caret.x = config.PARAGRAPH_PADDING
     pos.caret.y = p.offsetTop + config.ADJUST_Y
     pos.caret.offset = 0

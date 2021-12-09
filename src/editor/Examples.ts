@@ -29,8 +29,11 @@ export const examples: Array<Array<TextNode>> = [
   //[n6],
   [n7],
   [n8],
-  [n9],
-  [
+  [n9]
+]
+
+/* These only work when navigating, editing doesn't work because they refer to each other
+[
     n2,
     n3,
     n4,
@@ -140,4 +143,4 @@ export const examples: Array<Array<TextNode>> = [
     n3,
     n4
   ]
-]
+*/

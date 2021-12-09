@@ -32,12 +32,3 @@ export function getDocumentCoords(
   y = y - cont.top + d.scrollTop
   return [x, y]
 }
-
-export function getCoords(span: Element, offset: number): [number, number] {
-  const rect = getRectFromRange(span.childNodes[0], offset)
-  const d = document.querySelectorAll('.document')[0]
-  const cont = d.getBoundingClientRect()
-  const x = rect.left - cont.left
-  const y = rect.top - cont.top + d.scrollTop
-  return [x, y]
-}

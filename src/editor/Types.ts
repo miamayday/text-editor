@@ -55,25 +55,6 @@ export type EditorState = {
 
 /* Caret */
 
-export interface SetterProps {
-  el: HTMLElement
-  offset: number
-  x: number
-  y: number
-  length: (pindex: number, sindex: number) => number
-  spanCount: (pindex: number) => number
-  pCount: number
-}
-
-export interface MoverProps {
-  caret: Caret
-  pindex: number
-  sindex: number
-  length: (pindex: number, sindex: number) => number
-  spanCount: (pindex: number) => number
-  pCount: number
-}
-
 export type Position = {
   caret: Caret
   pindex: number
