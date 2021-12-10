@@ -151,36 +151,6 @@ function calculateHorizontal(
   pos.sindex = nextPos.sindex
 }
 
-class OffsetIterator {
-  private paragraphs: Array<Array<TextNode>>
-  private offset: number = 0
-  private pindex: number = 0
-  private sindex: number = 0
-
-  private slen: number = 0
-  private plen: number = 0
-
-  constructor(paragraphs: Array<Array<TextNode>>, pos: Position) {
-    this.paragraphs = paragraphs
-    this.offset = pos.caret.offset
-    this.pindex = pos.pindex
-    this.sindex = pos.sindex
-
-    const p = paragraphs[pos.pindex]
-    const s = p[pos.sindex]
-    this.slen = s.text.length
-    this.plen = p.length
-  }
-
-  public left(): number {
-    return this.offset
-  }
-
-  public right(): number {
-    return this.offset
-  }
-}
-
 /**
  * Seeks the next line when moving up/down with arrow keys.
  */
