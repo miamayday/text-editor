@@ -70,7 +70,13 @@ function calculateHorizontal(
 ): void {
   left ? console.log('Move left') : console.log('Move right')
 
-  const nextPos = moveOffset(left, paragraphs, pos)
+  const stump = {
+    // TODO:
+    offset: pos.caret.offset,
+    pindex: pos.pindex,
+    sindex: pos.sindex
+  }
+  const nextPos = moveOffset(left, paragraphs, stump)
   if (nextPos === null) {
     left ? console.log('*Start of document*') : console.log('*End of document*')
     return
@@ -177,7 +183,13 @@ function seekLine(
   /* Seek y */
 
   while (pos.caret.y === originalY) {
-    const nextPos = moveOffset(up, paragraphs, pos)
+    const stump = {
+      // TODO:
+      offset: pos.caret.offset,
+      pindex: pos.pindex,
+      sindex: pos.sindex
+    }
+    const nextPos = moveOffset(up, paragraphs, stump)
 
     if (nextPos === null) {
       //up ? console.log('*Start of document*') : console.log('*End of document*')
@@ -237,7 +249,13 @@ function seekPosition(
   let bestDiff = Math.abs(originalX - pos.caret.x)
 
   while (true) {
-    const nextPos = moveOffset(up, paragraphs, pos)
+    const stump = {
+      // TODO:
+      offset: pos.caret.offset,
+      pindex: pos.pindex,
+      sindex: pos.sindex
+    }
+    const nextPos = moveOffset(up, paragraphs, stump)
 
     if (nextPos === null) {
       up ? console.log('*Start of document*') : console.log('*End of document*')

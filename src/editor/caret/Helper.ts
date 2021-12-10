@@ -1,6 +1,6 @@
 /* Helper functions used by Setter.tsx and Mover.tsx */
 
-import { TextNode, Position } from '../Types'
+import { TextNode, Status, Position } from '../Types'
 
 // TODO:
 class OffsetIterator {
@@ -35,15 +35,11 @@ class OffsetIterator {
 
 function incrementOffset(
   paragraphs: Array<Array<TextNode>>,
-  pos: Position
-): {
-  offset: number
-  pindex: number
-  sindex: number
-} | null {
-  let offset = pos.caret.offset + 1
-  let pindex = pos.pindex
-  let sindex = pos.sindex
+  status: Status
+): Status | null {
+  let offset = status.offset + 1
+  let pindex = status.pindex
+  let sindex = status.sindex
 
   if (offset <= paragraphs[pindex][sindex].text.length) {
     return { offset, pindex, sindex }
@@ -72,15 +68,11 @@ function incrementOffset(
 
 function decrementOffset(
   paragraphs: Array<Array<TextNode>>,
-  pos: Position
-): {
-  offset: number
-  pindex: number
-  sindex: number
-} | null {
-  let offset = pos.caret.offset - 1
-  let pindex = pos.pindex
-  let sindex = pos.sindex
+  status: Status
+): Status | null {
+  let offset = status.offset - 1
+  let pindex = status.pindex
+  let sindex = status.sindex
 
   if (offset >= 1 || (offset >= 0 && sindex === 0)) {
     return { offset, pindex, sindex }
@@ -117,15 +109,11 @@ function decrementOffset(
 export function moveOffset(
   left: boolean,
   paragraphs: Array<Array<TextNode>>,
-  pos: Position
-): {
-  offset: number
-  pindex: number
-  sindex: number
-} | null {
+  status: Status
+): Status | null {
   if (left) {
-    return decrementOffset(paragraphs, pos)
+    return decrementOffset(paragraphs, status)
   } else {
-    return incrementOffset(paragraphs, pos)
+    return incrementOffset(paragraphs, status)
   }
 }

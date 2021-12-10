@@ -69,3 +69,16 @@ export interface WriterProps {
   sindex: number
   paragraphs: Array<Array<TextNode>>
 }
+
+/* Replacements */
+
+export type Status = {
+  offset: number
+  pindex: number
+  sindex: number
+}
+
+export type Coordinates = {
+  x: number
+  y: number
+}
