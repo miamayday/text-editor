@@ -260,6 +260,8 @@ export function Newline(props: WriterProps): {
   return { paragraphs, direction: Direction.NewLine }
 }
 
+// TODO: REPLACEMENT FUNCTIONS
+
 function WriteNew(
   paragraphs: Array<Array<TextNode>>,
   pos: Position,

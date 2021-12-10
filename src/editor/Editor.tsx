@@ -10,7 +10,9 @@ import {
   Direction,
   Action,
   WriterProps,
-  Position
+  Position,
+  Coordinates,
+  Status
 } from './Types'
 // Functionality for caret navigation and editing
 import * as CaretSetter from './caret/Setter'
@@ -83,22 +85,12 @@ class Editor extends React.Component<EditorProps, EditorState> {
    * Calls the Setter to calculate the caret position.
    * @see calculateCaretPosition function in caret/Setter.ts
    */
-  setCaret(
-    el: HTMLElement,
-    offset: number,
-    clientX: number,
-    clientY: number,
-    pindex: number,
-    sindex: number = 0
-  ): void {
+  setCaret(el: HTMLElement, client: Coordinates, status: Status): void {
     const pos: Position = CaretSetter.calculateCaretPosition(
       this.state.paragraphs,
       el,
-      offset,
-      clientX,
-      clientY,
-      pindex,
-      sindex
+      client,
+      status
     )
 
     const style = this.state.paragraphs[pos.pindex][pos.sindex].style
@@ -123,7 +115,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
       return
     }
 
-    const testNewFunctions = false
+    const testNewFunctions = false // TODO:
     if (testNewFunctions) {
       const pos: Position = {
         caret: this.state.caret,
@@ -274,7 +266,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
         return // Nothing can be done without offset
       }
 
-      let sindex = undefined
+      let sindex = 0
       // The clicked element is either a text node (span element)
       // or paragraph (p element)
       if (el.className === 'text-node') {
@@ -291,7 +283,9 @@ class Editor extends React.Component<EditorProps, EditorState> {
         sindex = Number(attrSindex)
       }
 
-      this.setCaret(el, offset, event.clientX, event.clientY, pindex, sindex)
+      const client: Coordinates = { x: event.clientX, y: event.clientY }
+      const status: Status = { offset, pindex, sindex }
+      this.setCaret(el, client, status)
     }
   }
 

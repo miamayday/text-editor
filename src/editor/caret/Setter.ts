@@ -36,30 +36,27 @@ function calculateDistance(
 
 /**
  * Checks whether the current offset repeats for the next position.
+ *
+ * May modify x and y coordinates.
  * @returns Shortest distance to cursor position
  */
 function checkOffsetRepeat(
   paragraphs: Array<Array<TextNode>>,
-  pos: Position,
+  pos: Coordinates,
+  status: Status,
   mouse: Coordinates,
   method: Distance
 ): number {
   // Fix y coordinate to center of line for better results
   const CENTER_Y = config.CARET_HEIGHT / 2
 
-  const p = Coords.getParagraphElement(pos.pindex)
+  const p = Coords.getParagraphElement(status.pindex)
 
-  const currSpan = p.children[pos.sindex]
-  const [currX, currY] = Coords.getDocumentCoords(currSpan, pos.caret.offset)
+  const currSpan = p.children[status.sindex]
+  const [currX, currY] = Coords.getDocumentCoords(currSpan, status.offset)
   const currDist = calculateDistance(method, mouse, currX, currY + CENTER_Y)
 
-  const stump = {
-    // TODO:
-    offset: pos.caret.offset,
-    pindex: pos.pindex,
-    sindex: pos.sindex
-  }
-  const nextPos = moveOffset(false, paragraphs, stump)
+  const nextPos = moveOffset(false, paragraphs, status)
   if (nextPos !== null) {
     const nextSpan = p.children[nextPos.sindex]
     let [nextX, nextY] = Coords.getDocumentCoords(nextSpan, nextPos.offset)
@@ -71,15 +68,15 @@ function checkOffsetRepeat(
       const nextDist = calculateDistance(method, mouse, nextX, nextY + CENTER_Y)
       if (nextDist < currDist) {
         console.log('Choose next')
-        pos.caret.x = nextX
-        pos.caret.y = nextY
+        pos.x = nextX
+        pos.y = nextY
         return nextDist
       }
     }
   }
   console.log('Keep current')
-  pos.caret.x = currX
-  pos.caret.y = currY
+  pos.x = currX
+  pos.y = currY
   return currDist
 }
 
@@ -87,10 +84,10 @@ function checkOffsetRepeat(
  * Calculates the caret position within the clicked span.
  */
 function calculateForSpan(
-  pos: Position,
+  pos: Coordinates,
+  status: Status,
   paragraphs: Array<Array<TextNode>>,
   el: HTMLElement,
-  offset: number,
   mouse: Coordinates
 ): void {
   console.log('Set caret for span:', el)
@@ -105,19 +102,19 @@ function calculateForSpan(
   let shortestDist = Number.MAX_VALUE
 
   // Set current caret position
-  if (offset <= paragraphs[pos.pindex][pos.sindex].text.length) {
-    ;[pos.caret.x, pos.caret.y] = Coords.getDocumentCoords(el, offset)
-    shortestDist = Math.abs(mouse.x - pos.caret.x)
+  if (status.offset <= paragraphs[status.pindex][status.sindex].text.length) {
+    ;[pos.x, pos.y] = Coords.getDocumentCoords(el, status.offset)
+    shortestDist = Math.abs(mouse.x - pos.x)
   }
 
   if (
-    pos.sindex > 0 &&
-    offset <= paragraphs[pos.pindex][pos.sindex - 1].text.length
+    status.sindex > 0 &&
+    status.offset <= paragraphs[status.pindex][status.sindex - 1].text.length
   ) {
     // Check previous span
     if (el.previousSibling !== null) {
       const prevSpan = el.previousSibling as HTMLElement
-      const [prevX, prevY] = Coords.getDocumentCoords(prevSpan, offset)
+      const [prevX, prevY] = Coords.getDocumentCoords(prevSpan, status.offset)
       // Calculate distance to the cursor position
       const dist = Math.abs(prevX - mouse.x)
       // Compare this to the current shortest distance.
@@ -126,9 +123,9 @@ function calculateForSpan(
       // between two spans is the last position of the previous span.
       if (dist <= shortestDist) {
         console.log('Fix caret to previous span')
-        pos.caret.x = prevX
-        pos.caret.y = prevY
-        pos.sindex--
+        pos.x = prevX
+        pos.y = prevY
+        status.sindex--
       }
     }
   }
@@ -149,24 +146,25 @@ function calculateForSpan(
 
   // To correct this, check whether the user clicked at the start.
 
-  checkOffsetRepeat(paragraphs, pos, mouse, Distance.X)
+  checkOffsetRepeat(paragraphs, pos, status, mouse, Distance.X)
 }
 
 /**
  * Seeks the position closest to cursor with respect to y.
  *
- * In other words, seeks the line which corresponds to cursor position.
+ * May modify pos and status objects.
  */
 function seekLine(
+  pos: Coordinates,
+  status: Status,
   paragraphs: Array<Array<TextNode>>,
-  pos: Position,
-  offset: number,
+  goalOffset: number,
   mouse: Coordinates,
   start: number,
   end: number
 ): void {
-  const p = Coords.getParagraphElement(pos.pindex)
-  const arr = paragraphs[pos.pindex]
+  const p = Coords.getParagraphElement(status.pindex)
+  const arr = paragraphs[status.pindex]
 
   let shortestDistance = Number.MAX_VALUE
   let candidate = start
@@ -178,34 +176,38 @@ function seekLine(
   while (candidate !== invalid) {
     const node = arr[candidate]
     // Check that the candidate contains the offset
-    if (offset <= node.text.length) {
+    if (goalOffset <= node.text.length) {
       // Calculate candidate position
       const span = p.children[candidate]
-      const [x, y] = Coords.getDocumentCoords(span, offset)
-      const candidatePos: Position = {
-        caret: { offset, x, y },
-        pindex: pos.pindex,
+      const [x, y] = Coords.getDocumentCoords(span, goalOffset)
+      const candidatePos = { x, y }
+      const candidateStatus = {
+        offset: goalOffset,
+        pindex: status.pindex,
         sindex: candidate
       }
+
       // Calculate distance to cursor position + check border case
       const dist = checkOffsetRepeat(
         paragraphs,
         candidatePos,
+        candidateStatus,
         mouse,
         Distance.Y
       )
+
       // Check if new candidate is closer
       if (dist < shortestDistance) {
         console.log('New best candidate:', candidate)
         shortestDistance = dist
-        pos.caret.offset = offset
-        pos.caret.x = candidatePos.caret.x
-        pos.caret.y = candidatePos.caret.y
-        pos.sindex = candidate
+        pos.x = candidatePos.x
+        pos.y = candidatePos.y
+        status.offset = goalOffset
+        status.sindex = candidate
         // Check if new candidate is on the correct line
         // * Inclusive upper limit
         // * Exclusive lower limit
-        const upperLimit = candidatePos.caret.y - config.ADJUST_Y
+        const upperLimit = pos.y - config.ADJUST_Y
         const lowerLimit = upperLimit + config.LINE_HEIGHT
         if (mouse.y >= upperLimit && mouse.y < lowerLimit) {
           console.log('Found correct line')
@@ -219,23 +221,26 @@ function seekLine(
 
 /**
  * Seeks the position closest to cursor with respect to x.
+ *
+ * May modify pos and status objects.
  */
 function seekPosition(
+  pos: Coordinates,
+  status: Status,
   paragraphs: Array<Array<TextNode>>,
-  pos: Position,
-  offset: number,
+  goalOffset: number,
   mouse: Coordinates,
   start: number,
   end: number
 ): void {
-  const p = Coords.getParagraphElement(pos.pindex)
-  const arr = paragraphs[pos.pindex]
+  const p = Coords.getParagraphElement(status.pindex)
+  const arr = paragraphs[status.pindex]
 
   let shortestDistance = Number.MAX_VALUE
   let candidate = start
   let increment = Math.sign(end - start)
 
-  const originalY = pos.caret.y
+  const originalY = pos.y
 
   /* Seek x */
 
@@ -243,34 +248,41 @@ function seekPosition(
   while (candidate !== invalid) {
     const node = arr[candidate]
     // Check that the candidate contains the offset
-    if (offset <= node.text.length) {
+    if (goalOffset <= node.text.length) {
       // Calculate candidate position
       const span = p.children[candidate]
-      const [x, y] = Coords.getDocumentCoords(span, offset)
-      const candidatePos: Position = {
-        caret: { offset, x, y },
-        pindex: pos.pindex,
+      const [x, y] = Coords.getDocumentCoords(span, goalOffset)
+      const candidatePos = { x, y }
+      const candidateStatus = {
+        offset: goalOffset,
+        pindex: status.pindex,
         sindex: candidate
       }
 
       // Check border case
-      checkOffsetRepeat(paragraphs, candidatePos, mouse, Distance.Y)
+      checkOffsetRepeat(
+        paragraphs,
+        candidatePos,
+        candidateStatus,
+        mouse,
+        Distance.Y
+      )
 
       // Check if candidate is still on the same line
-      if (candidatePos.caret.y !== originalY) {
+      if (candidatePos.y !== originalY) {
         console.log('Break')
         break
       }
 
       // Calculate distance to cursor position
-      const dist = Math.abs(mouse.x - candidatePos.caret.x)
+      const dist = Math.abs(mouse.x - candidatePos.x)
       if (dist < shortestDistance) {
         console.log('New best candidate:', candidate)
         shortestDistance = dist
-        pos.caret.offset = offset
-        pos.caret.x = candidatePos.caret.x
-        pos.caret.y = candidatePos.caret.y
-        pos.sindex = candidate
+        pos.x = candidatePos.x
+        pos.y = candidatePos.y
+        status.offset = goalOffset
+        status.sindex = candidate
       }
     }
     candidate += increment
@@ -281,108 +293,112 @@ function seekPosition(
  * Calculates the caret position within the clicked paragraph.
  */
 function calculateForParagraph(
-  pos: Position,
+  pos: Coordinates,
+  status: Status,
   paragraphs: Array<Array<TextNode>>,
   el: HTMLElement,
-  offset: number,
   mouse: Coordinates
 ): void {
   console.log('Set caret for paragraph:', el)
 
   // Selected paragraph as an HTML element
-  const p = Coords.getParagraphElement(pos.pindex)
+  const p = Coords.getParagraphElement(status.pindex)
   // Selected paragraph as an array of text nodes
-  const arr = paragraphs[pos.pindex]
+  const arr = paragraphs[status.pindex]
 
   // Check for empty paragraph
   if (arr[0].text.length === 0) {
     console.log('Empty paragraph')
-    pos.caret.x = config.PARAGRAPH_PADDING
-    pos.caret.y = p.offsetTop + config.ADJUST_Y
-    pos.caret.offset = 0
+    pos.x = config.PARAGRAPH_PADDING
+    pos.y = p.offsetTop + config.ADJUST_Y
+    status.offset = 0
     return
   }
 
-  // Traverse the spans containing offset, starting from the middle
+  // Traverse the spans containing goalOffset, starting from the middle
+  const goalOffset = status.offset
 
   const mid = Math.floor((arr.length - 1) / 2)
   const midNode = arr[mid]
   const midSpan = p.children[mid]
-  let midOffset = offset
-  if (offset > midNode.text.length) {
+  let midOffset = goalOffset
+  if (goalOffset > midNode.text.length) {
     console.log('Change offset')
     midOffset = Math.floor(midNode.text.length / 2)
   }
 
   // Set initial position
-  ;[pos.caret.x, pos.caret.y] = Coords.getDocumentCoords(midSpan, midOffset)
-  pos.caret.offset = midOffset
-  pos.sindex = mid
+  ;[pos.x, pos.y] = Coords.getDocumentCoords(midSpan, midOffset)
+  status.offset = midOffset
+  status.sindex = mid
 
   // Check border case
-  checkOffsetRepeat(paragraphs, pos, mouse, Distance.Y)
+  checkOffsetRepeat(paragraphs, pos, status, mouse, Distance.Y)
 
   // Limits for y (line corresponding to cursor position)
-  const upperLimit = pos.caret.y - config.ADJUST_Y // Inclusive
+  const upperLimit = pos.y - config.ADJUST_Y // Inclusive
   const lowerLimit = upperLimit + config.LINE_HEIGHT // Exclusive
 
   if (mouse.y < upperLimit) {
     console.log('Go up')
-    seekLine(paragraphs, pos, offset, mouse, mid, 0)
+    seekLine(pos, status, paragraphs, goalOffset, mouse, mid, 0)
   } else if (mouse.y >= lowerLimit) {
     console.log('Go down')
-    seekLine(paragraphs, pos, offset, mouse, mid, arr.length - 1)
+    seekLine(pos, status, paragraphs, goalOffset, mouse, mid, arr.length - 1)
   } else {
     console.log('Already on the correct line')
   }
 
-  if (mouse.x < pos.caret.x) {
+  if (mouse.x < pos.x) {
     console.log('Go left')
-    seekPosition(paragraphs, pos, offset, mouse, pos.sindex, 0)
-  } else if (mouse.x > pos.caret.x) {
+    seekPosition(pos, status, paragraphs, goalOffset, mouse, status.sindex, 0)
+  } else if (mouse.x > pos.x) {
     console.log('Go right')
-    seekPosition(paragraphs, pos, offset, mouse, pos.sindex, arr.length - 1)
+    seekPosition(
+      pos,
+      status,
+      paragraphs,
+      goalOffset,
+      mouse,
+      status.sindex,
+      arr.length - 1
+    )
   } else {
-    // TODO: Does it ever come to this?
+    // TODO: Do nothing?
   }
 }
 
 export function calculateCaretPosition(
   paragraphs: Array<Array<TextNode>>,
   el: HTMLElement,
-  offset: number,
-  clientX: number,
-  clientY: number,
-  pindex: number,
-  sindex: number
+  client: Coordinates,
+  status: Status
 ): Position {
   // The document element which contains the paragraph elements
   const d = document.querySelectorAll('.document')[0]
   // The bounds of the document relative to the viewport
   const cont = d.getBoundingClientRect()
   // Mouse coordinates relative to the document
-  const mouseX = clientX - cont.left
-  const mouseY = clientY - cont.top + d.scrollTop
+  const mouseX = client.x - cont.left
+  const mouseY = client.y - cont.top + d.scrollTop
 
-  const oldPos: Position = {
-    caret: { offset, x: 0, y: 0 },
-    pindex,
-    sindex
-  }
-
-  // TODO: Integrate new types
   const pos: Coordinates = { x: 0, y: 0 }
-  const status: Status = { offset, pindex, sindex }
   const mouse: Coordinates = { x: mouseX, y: mouseY }
 
   console.log(' * * * CARET SETTING * * * ')
-  console.log('focusOffset:', offset)
+  console.log('focusOffset:', status.offset)
 
   if (el.className === 'text-node') {
-    calculateForSpan(oldPos, paragraphs, el, offset, mouse)
+    calculateForSpan(pos, status, paragraphs, el, mouse)
   } else if (el.className === 'paragraph') {
-    calculateForParagraph(oldPos, paragraphs, el, offset, mouse)
+    calculateForParagraph(pos, status, paragraphs, el, mouse)
   }
 
+  // TODO: Delete
+  const oldPos: Position = {
+    caret: { offset: status.offset, x: pos.x, y: pos.y },
+    pindex: status.pindex,
+    sindex: status.sindex
+  }
   return oldPos
 }
