@@ -4,10 +4,6 @@ export function getParagraphElement(pindex: number): HTMLElement {
   return document.querySelectorAll('.paragraph')[pindex] as HTMLElement
 }
 
-export function calcMiddle(x1: number, x2: number): number {
-  return x1 + (x2 - x1) / 2
-}
-
 export function getRectFromRange(node: Node, offset: number): DOMRect {
   const range = document.createRange()
   range.setStart(node, offset)

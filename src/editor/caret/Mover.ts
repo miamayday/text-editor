@@ -347,7 +347,7 @@ export function calculateCaretPosition(
     sindex
   }
 
-  console.log('\n * * * CARET MOVEMENT * * * \n\n')
+  console.log(' * * * CARET MOVEMENT * * * ')
 
   switch (direction) {
     case Direction.Up:

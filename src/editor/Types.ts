@@ -35,7 +35,7 @@ export enum Direction {
   NewLine
 }
 
-export enum Command {
+export enum Action {
   Write,
   Delete,
   NewLine
@@ -46,7 +46,7 @@ export type EditorState = {
   caret?: Caret
   mouse?: Mouse // a pink square that acts a snapping guide
   direction?: Direction // caret guide
-  command?: Command // writer guide
+  action?: Action // writer guide
   key?: string // input key
   pindex?: number
   sindex?: number

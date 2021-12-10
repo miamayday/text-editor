@@ -415,7 +415,7 @@ export function calculateCaretPosition(
     sindex
   }
 
-  console.log('\n * * * CARET SETTING * * * \n\n')
+  console.log(' * * * CARET SETTING * * * ')
   console.log('focusOffset:', offset)
 
   if (el.className === 'text-node') {
