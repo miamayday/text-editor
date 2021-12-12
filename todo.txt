@@ -1,15 +1,11 @@
+scroll pushing when caret moves out of view
+
 selection...
 fix up writer mess
 config to css
 
 rich editing
 footer
-scroll pushing when caret moves out of view
-immutability with this.state?
-moveup/down errors
 
 ! removes undefined/null
 ? adds undefined or sth
-
-should style change when clicking on a text node that
-has a different style from the toolbar style?

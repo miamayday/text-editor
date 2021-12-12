@@ -56,10 +56,10 @@ function checkOffsetRepeat(
   const [currX, currY] = Coords.getDocumentCoords(currSpan, status.offset)
   const currDist = calculateDistance(method, mouse, currX, currY + CENTER_Y)
 
-  const nextPos = moveOffset(false, paragraphs, status)
-  if (nextPos !== null) {
-    const nextSpan = p.children[nextPos.sindex]
-    let [nextX, nextY] = Coords.getDocumentCoords(nextSpan, nextPos.offset)
+  const nextStatus = moveOffset(false, paragraphs, status)
+  if (nextStatus !== null) {
+    const nextSpan = p.children[nextStatus.sindex]
+    let [nextX, nextY] = Coords.getDocumentCoords(nextSpan, nextStatus.offset)
 
     // Check if user clicked at the start by comparing the bounds
     // of the current position and next position

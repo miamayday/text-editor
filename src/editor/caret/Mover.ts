@@ -4,7 +4,7 @@
    Rules:
    - When moving from end of line to the start of next:
      * If the next is a new span: repeat offset
-     * If the next is a new paragraph: reset offset
+     * If the next is a new paragraph: reset offset to 0
    - When moving from start of line to the end of previous:
      * If the previous is a new span: repeat offset
      * If the previous is a new paragraph: set offset to end of previous
@@ -12,71 +12,81 @@
    Main function calculateCaretPosition is at the bottom. */
 
 import * as Coords from './Coords'
-import { Position, Caret, TextNode, Direction } from '../Types'
+import {
+  Position,
+  Caret,
+  TextNode,
+  Direction,
+  Coordinates,
+  Status
+} from '../Types'
 import { moveOffset } from './Helper'
 import config from '../../config'
 
-function moveAfterWrite(pos: Position): void {
-  const p = document.querySelectorAll('.paragraph')[pos.pindex] as HTMLElement
-  const span = p.children[pos.sindex]
-  const [x, y] = Coords.getDocumentCoords(span, pos.caret.offset)
-  pos.caret.x = x
-  pos.caret.y = y
+function moveAfterWrite(pos: Coordinates, status: Status): void {
+  const p = document.querySelectorAll('.paragraph')[
+    status.pindex
+  ] as HTMLElement
+  const span = p.children[status.sindex]
+  const [x, y] = Coords.getDocumentCoords(span, status.offset)
+  pos.x = x
+  pos.y = y
 }
 
 function moveAfterDelete(
   paragraphs: Array<Array<TextNode>>,
-  pos: Position
+  pos: Coordinates,
+  status: Status
 ): void {
-  const p = document.querySelectorAll('.paragraph')[pos.pindex] as HTMLElement
-  if (paragraphs[pos.pindex][pos.sindex].text.length === 0) {
-    pos.caret.offset = 0
-    pos.caret.x = config.PARAGRAPH_PADDING
-    pos.caret.y = p.offsetTop + config.ADJUST_Y
+  const p = document.querySelectorAll('.paragraph')[
+    status.pindex
+  ] as HTMLElement
+  if (paragraphs[status.pindex][status.sindex].text.length === 0) {
+    pos.x = config.PARAGRAPH_PADDING
+    pos.y = p.offsetTop + config.ADJUST_Y
+    status.offset = 0
     return
   }
 
-  const span = p.children[pos.sindex]
-  const [x, y] = Coords.getDocumentCoords(span, pos.caret.offset)
-  pos.caret.x = x
-  pos.caret.y = y
+  const span = p.children[status.sindex]
+  const [x, y] = Coords.getDocumentCoords(span, status.offset)
+  pos.x = x
+  pos.y = y
 }
 
 function moveAfterNewline(
   paragraphs: Array<Array<TextNode>>,
-  pos: Position
+  pos: Coordinates,
+  status: Status
 ): void {
-  pos.pindex += 1
-  pos.sindex = 0
+  status.pindex += 1
+  status.sindex = 0
 
-  const p = document.querySelectorAll('.paragraph')[pos.pindex] as HTMLElement
-  if (paragraphs[pos.pindex][pos.sindex].text.length !== 0) {
-    const span = p.children[pos.sindex]
+  const p = document.querySelectorAll('.paragraph')[
+    status.pindex
+  ] as HTMLElement
+  if (paragraphs[status.pindex][status.sindex].text.length !== 0) {
+    const span = p.children[status.sindex]
     const [x, y] = Coords.getDocumentCoords(span, 0)
-    pos.caret.offset = 0
-    pos.caret.x = x
-    pos.caret.y = y
+    pos.x = x
+    pos.y = y
+    status.offset = 0
   }
 
-  pos.caret.offset = 0
-  pos.caret.x = config.PARAGRAPH_PADDING
-  pos.caret.y = p.offsetTop + config.ADJUST_Y
+  pos.x = config.PARAGRAPH_PADDING
+  pos.y = p.offsetTop + config.ADJUST_Y
+  status.offset = 0
 }
 
 function calculateHorizontal(
   left: boolean,
   paragraphs: Array<Array<TextNode>>,
-  pos: Position
+  pos: Coordinates,
+  status: Status
 ): void {
   left ? console.log('Move left') : console.log('Move right')
 
-  const stump = {
-    // TODO:
-    offset: pos.caret.offset,
-    pindex: pos.pindex,
-    sindex: pos.sindex
-  }
-  const nextPos = moveOffset(left, paragraphs, stump)
+  const nextPos = moveOffset(left, paragraphs, status)
   if (nextPos === null) {
     left ? console.log('*Start of document*') : console.log('*End of document*')
     return
@@ -86,11 +96,11 @@ function calculateHorizontal(
   if (paragraphs[nextPos.pindex][nextPos.sindex].text.length === 0) {
     console.log('Empty paragraph')
     const p = Coords.getParagraphElement(nextPos.pindex)
-    pos.caret.x = config.PARAGRAPH_PADDING
-    pos.caret.y = p.offsetTop + config.ADJUST_Y
-    pos.caret.offset = nextPos.offset
-    pos.pindex = nextPos.pindex
-    pos.sindex = nextPos.sindex
+    pos.x = config.PARAGRAPH_PADDING
+    pos.y = p.offsetTop + config.ADJUST_Y
+    status.offset = nextPos.offset
+    status.pindex = nextPos.pindex
+    status.sindex = nextPos.sindex
     return
   }
 
@@ -99,62 +109,62 @@ function calculateHorizontal(
   const [nextX, nextY] = Coords.getDocumentCoords(span, nextPos.offset)
 
   // Current paragraph is empty
-  if (paragraphs[pos.pindex][pos.sindex].text.length === 0) {
+  if (paragraphs[status.pindex][status.sindex].text.length === 0) {
     console.log('Move straight to next position')
-    pos.caret.x = nextX
-    pos.caret.y = nextY
-    pos.caret.offset = nextPos.offset
-    pos.pindex = nextPos.pindex
-    pos.sindex = nextPos.sindex
+    pos.x = nextX
+    pos.y = nextY
+    status.offset = nextPos.offset
+    status.pindex = nextPos.pindex
+    status.sindex = nextPos.sindex
     return
   }
 
   // Check current position for offset repeat
-  if (paragraphs[pos.pindex][pos.sindex].text.length > 0) {
-    p = Coords.getParagraphElement(pos.pindex)
-    span = p.children[pos.sindex]
-    const [x, y] = Coords.getDocumentCoords(span, pos.caret.offset)
-    if (left && y !== pos.caret.y) {
-      console.log('Offset repeat: Fix to end')
-      pos.caret.x = x
-      pos.caret.y = y
+  if (paragraphs[status.pindex][status.sindex].text.length > 0) {
+    p = Coords.getParagraphElement(status.pindex)
+    span = p.children[status.sindex]
+    const [x, y] = Coords.getDocumentCoords(span, status.offset)
+    if (left && y !== pos.y) {
+      console.log('Offset repeat: Fix to end (going left)')
+      pos.x = x
+      pos.y = y
       return
-    } else if (!left && nextY !== pos.caret.y) {
-      console.log('Offset repeat: Fix to start')
-      pos.caret.x = config.PARAGRAPH_PADDING
-      pos.caret.y = nextY
-      if (nextPos.pindex !== pos.pindex) {
+    } else if (!left && nextY !== pos.y) {
+      console.log('Offset repeat: Fix to start (going right)')
+      pos.x = config.PARAGRAPH_PADDING
+      pos.y = nextY
+      if (nextPos.pindex !== status.pindex) {
         // Paragraphs must start at 0 offset
-        pos.caret.offset = 0
-        pos.pindex = nextPos.pindex
-        pos.sindex = nextPos.sindex
+        status.offset = 0
+        status.pindex = nextPos.pindex
+        status.sindex = nextPos.sindex
       }
       return
     }
   }
 
   // Check next position for offset repeat
-  if (nextY !== pos.caret.y) {
-    if (nextPos.pindex === pos.pindex) {
-      console.log('Offset repeat: Fix to start (new span)')
-      pos.caret.x = config.PARAGRAPH_PADDING
+  if (nextY !== pos.y) {
+    if (nextPos.pindex === status.pindex) {
+      console.log('Offset repeat: Fix to start (going left)')
+      pos.x = config.PARAGRAPH_PADDING
     } else {
       console.log('Offset repeat: Fix to end (new paragraph)')
-      pos.caret.x = nextX
-      pos.caret.y = nextY
+      pos.x = nextX
+      pos.y = nextY
     }
-    pos.caret.offset = nextPos.offset
-    pos.pindex = nextPos.pindex
-    pos.sindex = nextPos.sindex
+    status.offset = nextPos.offset
+    status.pindex = nextPos.pindex
+    status.sindex = nextPos.sindex
     return
   }
 
   // Default case
-  pos.caret.x = nextX
-  pos.caret.y = nextY
-  pos.caret.offset = nextPos.offset
-  pos.pindex = nextPos.pindex
-  pos.sindex = nextPos.sindex
+  pos.x = nextX
+  pos.y = nextY
+  status.offset = nextPos.offset
+  status.pindex = nextPos.pindex
+  status.sindex = nextPos.sindex
 }
 
 /**
@@ -163,72 +173,67 @@ function calculateHorizontal(
 function seekLine(
   up: boolean,
   paragraphs: Array<Array<TextNode>>,
-  pos: Position
+  pos: Coordinates,
+  status: Status
 ) {
-  let p = Coords.getParagraphElement(pos.pindex)
-  let span = p.children[pos.sindex]
+  let p = Coords.getParagraphElement(status.pindex)
+  let span = p.children[status.sindex]
 
-  const originalY = pos.caret.y
+  const originalY = pos.y
 
   // Check for offset repeat when going up
-  if (up && paragraphs[pos.pindex][pos.sindex].text.length > 0) {
-    const [x, y] = Coords.getDocumentCoords(span, pos.caret.offset)
-    if (pos.caret.y !== y) {
+  if (up && paragraphs[status.pindex][status.sindex].text.length > 0) {
+    const [x, y] = Coords.getDocumentCoords(span, status.offset)
+    if (pos.y !== y) {
       // End of previous line
-      pos.caret.x = x
-      pos.caret.y = y
+      pos.x = x
+      pos.y = y
     }
   }
 
   /* Seek y */
 
-  while (pos.caret.y === originalY) {
-    const stump = {
-      // TODO:
-      offset: pos.caret.offset,
-      pindex: pos.pindex,
-      sindex: pos.sindex
-    }
-    const nextPos = moveOffset(up, paragraphs, stump)
+  while (pos.y === originalY) {
+    const nextStatus = moveOffset(up, paragraphs, status)
 
-    if (nextPos === null) {
+    if (nextStatus === null) {
       //up ? console.log('*Start of document*') : console.log('*End of document*')
       return
     }
 
-    if (nextPos.pindex !== pos.pindex) {
+    if (nextStatus.pindex !== status.pindex) {
       // New paragraph
-      p = Coords.getParagraphElement(nextPos.pindex)
-      span = p.children[nextPos.sindex] as HTMLElement
+      p = Coords.getParagraphElement(nextStatus.pindex)
+      span = p.children[nextStatus.sindex] as HTMLElement
       // Empty paragraph
-      if (paragraphs[nextPos.pindex][nextPos.sindex].text.length === 0) {
-        pos.caret.offset = 0
-        pos.caret.x = config.PARAGRAPH_PADDING
-        pos.caret.y = p.offsetTop + config.ADJUST_Y
-        pos.pindex = nextPos.pindex
-        pos.sindex = nextPos.sindex
+      if (paragraphs[nextStatus.pindex][nextStatus.sindex].text.length === 0) {
+        pos.x = config.PARAGRAPH_PADDING
+        pos.y = p.offsetTop + config.ADJUST_Y
+        status.offset = 0
+        status.pindex = nextStatus.pindex
+        status.sindex = nextStatus.sindex
         return
       }
-    } else if (nextPos.sindex !== pos.sindex) {
+    } else if (nextStatus.sindex !== status.sindex) {
       // New span
-      span = p.children[nextPos.sindex] as HTMLElement
+      span = p.children[nextStatus.sindex] as HTMLElement
     }
 
-    const [x, y] = Coords.getDocumentCoords(span, nextPos.offset)
+    const [x, y] = Coords.getDocumentCoords(span, nextStatus.offset)
 
-    pos.caret.offset = nextPos.offset
-    pos.pindex = nextPos.pindex
-    pos.sindex = nextPos.sindex
+    status.offset = nextStatus.offset
+    status.pindex = nextStatus.pindex
+    status.sindex = nextStatus.sindex
 
-    if (!up && y !== pos.caret.y) {
+    if (!up && y !== pos.y) {
       console.log('Fix to start')
-      pos.caret.x = config.PARAGRAPH_PADDING
-      pos.caret.y = y
+      pos.x = config.PARAGRAPH_PADDING
+      pos.y = y
       break
     }
 
-    pos.caret.x = x
-    pos.caret.y = y
+    pos.x = x
+    pos.y = y
   }
 }
 
@@ -238,48 +243,43 @@ function seekLine(
 function seekPosition(
   up: boolean,
   paragraphs: Array<Array<TextNode>>,
-  pos: Position,
+  pos: Coordinates,
+  status: Status,
   originalX: number
 ) {
-  let p = Coords.getParagraphElement(pos.pindex)
-  let span = p.children[pos.sindex]
+  let p = Coords.getParagraphElement(status.pindex)
+  let span = p.children[status.sindex]
 
   /* Seek x */
 
-  let bestDiff = Math.abs(originalX - pos.caret.x)
+  let bestDiff = Math.abs(originalX - pos.x)
 
   while (true) {
-    const stump = {
-      // TODO:
-      offset: pos.caret.offset,
-      pindex: pos.pindex,
-      sindex: pos.sindex
-    }
-    const nextPos = moveOffset(up, paragraphs, stump)
+    const nextStatus = moveOffset(up, paragraphs, status)
 
-    if (nextPos === null) {
+    if (nextStatus === null) {
       up ? console.log('*Start of document*') : console.log('*End of document*')
       return
     }
 
-    if (nextPos.pindex !== pos.pindex) {
+    if (nextStatus.pindex !== status.pindex) {
       // Empty paragraph
       console.log('Empty paragraph')
       return
-    } else if (nextPos.sindex !== pos.sindex) {
+    } else if (nextStatus.sindex !== status.sindex) {
       // New span
-      span = p.children[nextPos.sindex] as HTMLElement
+      span = p.children[nextStatus.sindex] as HTMLElement
     }
 
-    const [x, y] = Coords.getDocumentCoords(span, nextPos.offset)
+    const [x, y] = Coords.getDocumentCoords(span, nextStatus.offset)
 
     // Reached start/end of line
-    if (y !== pos.caret.y) {
+    if (y !== pos.y) {
       console.log('Stop at line start/end')
       if (up) {
-        pos.caret.offset = nextPos.offset
-        pos.caret.x = config.PARAGRAPH_PADDING
-        pos.sindex = nextPos.sindex
+        pos.x = config.PARAGRAPH_PADDING
+        status.offset = nextStatus.offset
+        status.sindex = nextStatus.sindex
       }
       break
     }
@@ -287,9 +287,9 @@ function seekPosition(
     // Update best difference
     const diff = Math.abs(originalX - x)
     if (diff <= bestDiff) {
-      pos.caret.offset = nextPos.offset
-      pos.caret.x = x
-      pos.sindex = nextPos.sindex
+      pos.x = x
+      status.offset = nextStatus.offset
+      status.sindex = nextStatus.sindex
       if (diff === bestDiff) {
         console.log('Same difference')
         break
@@ -301,7 +301,7 @@ function seekPosition(
     }
 
     // Reached start of paragraph
-    if (up && nextPos.offset === 0 && nextPos.sindex === 0) {
+    if (up && nextStatus.offset === 0 && nextStatus.sindex === 0) {
       console.log('Stop at paragraph start')
       break
     }
@@ -311,15 +311,15 @@ function seekPosition(
 function calculateVertical(
   up: boolean,
   paragraphs: Array<Array<TextNode>>,
-  pos: Position
+  pos: Coordinates,
+  status: Status
 ): void {
   up ? console.log('Move up') : console.log('Move down')
 
-  const originalX = pos.caret.x
+  const originalX = pos.x
 
-  seekLine(up, paragraphs, pos)
-
-  seekPosition(up, paragraphs, pos, originalX)
+  seekLine(up, paragraphs, pos, status)
+  seekPosition(up, paragraphs, pos, status, originalX)
 }
 
 export function calculateCaretPosition(
@@ -329,37 +329,40 @@ export function calculateCaretPosition(
   pindex: number,
   sindex: number
 ): Position {
-  const pos: Position = {
-    caret: { ...caret },
-    pindex,
-    sindex
-  }
+  const pos: Coordinates = { x: caret.x, y: caret.y }
+  const status: Status = { offset: caret.offset, pindex, sindex }
 
   console.log(' * * * CARET MOVEMENT * * * ')
 
   switch (direction) {
     case Direction.Up:
-      calculateVertical(true, paragraphs, pos)
+      calculateVertical(true, paragraphs, pos, status)
       break
     case Direction.Right:
-      calculateHorizontal(false, paragraphs, pos)
+      calculateHorizontal(false, paragraphs, pos, status)
       break
     case Direction.Down:
-      calculateVertical(false, paragraphs, pos)
+      calculateVertical(false, paragraphs, pos, status)
       break
     case Direction.Left:
-      calculateHorizontal(true, paragraphs, pos)
+      calculateHorizontal(true, paragraphs, pos, status)
       break
     case Direction.Write:
-      moveAfterWrite(pos)
+      moveAfterWrite(pos, status)
       break
     case Direction.Delete:
-      moveAfterDelete(paragraphs, pos)
+      moveAfterDelete(paragraphs, pos, status)
       break
     case Direction.NewLine:
-      moveAfterNewline(paragraphs, pos)
+      moveAfterNewline(paragraphs, pos, status)
       break
   }
 
-  return pos
+  // TODO: Delete
+  const oldPos: Position = {
+    caret: { offset: status.offset, x: pos.x, y: pos.y },
+    pindex: status.pindex,
+    sindex: status.sindex
+  }
+  return oldPos
 }
