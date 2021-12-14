@@ -8,7 +8,6 @@
    Main function editParagraphs is at the bottom. */
 
 import {
-  WriterProps,
   TextNode,
   Style,
   Direction,
@@ -109,7 +108,7 @@ function deleteAcrossParagraphs(
   }
 
   // Merge nodes if they are of the same style
-  if (prevNode.style === currNode.style) {
+  if (stylesMatch(prevNode.style, currNode.style)) {
     prevNode.text = prevNode.text.concat(currNode.text)
     if (currParagraph.length > 1) {
       currParagraph.splice(0, 1)
@@ -159,14 +158,14 @@ function deleteAcrossNodes(
       return
     }
 
-    console.log('Delete node')
+    console.log('Delete middle')
     const prevNode = paragraph[status.sindex - 1]
     const prevNodeTextLength = prevNode.text.length
 
     if (paragraph.length - 1 > status.sindex) {
       const nextNode = paragraph[status.sindex + 1]
       // Merge nodes if they are of the same style
-      if (prevNode.style === nextNode.style) {
+      if (stylesMatch(prevNode.style, nextNode.style)) {
         console.log('Merge nodes')
         prevNode.text = prevNode.text.concat(nextNode.text)
         paragraph.splice(status.sindex, 1)
@@ -188,7 +187,7 @@ function deleteAcrossNodes(
     const prevNodeTextLength = prevNode.text.length
 
     // Merge nodes if they are of the same style
-    if (node.style === prevNode.style) {
+    if (stylesMatch(node.style, prevNode.style)) {
       prevNode.text = prevNode.text.concat(node.text)
       paragraph.splice(status.sindex, 1)
       console.log('Merge nodes')
@@ -218,7 +217,6 @@ function deleteCharacter(
   }
 
   deleteAcrossNodes(paragraphs, status)
-  return
 }
 
 function insertNewline(

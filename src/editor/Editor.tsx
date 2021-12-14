@@ -9,7 +9,6 @@ import {
   EditorState,
   Direction,
   Action,
-  WriterProps,
   Position,
   Coordinates,
   Status
