@@ -14,271 +14,32 @@ import {
   Direction,
   Caret,
   Action,
-  Position
+  Position,
+  Coordinates,
+  Status
 } from './Types'
 
 function stylesMatch(s1: Style, s2: Style): Boolean {
   return s1.bold === s2.bold && s1.italic === s2.italic
 }
 
-/**
- * Writes one character in the current position.
- *
- * @param props Caret position and paragraphs
- * @param key Character to be written
- * @param style Styling of the text node
- * @returns New state and a Direction
- */
-export function Write(
-  props: WriterProps,
-  key: string,
-  style: Style
-): {
-  caret: Caret
-  sindex: number
-  paragraphs: Array<Array<TextNode>>
-  direction: Direction
-} {
-  const out = {
-    caret: { ...props.caret },
-    sindex: props.sindex,
-    paragraphs: props.paragraphs,
-    direction: Direction.Write
-  }
-
-  const paragraph = props.paragraphs[props.pindex]
-  const node = paragraph[props.sindex]
-
-  if (stylesMatch(node.style, style)) {
-    const text = [
-      node.text.slice(0, out.caret.offset),
-      key, // add new character
-      node.text.slice(out.caret.offset)
-    ].join('')
-    node.text = text
-    out.caret.offset++
-    return out
-  }
-
-  console.log('styles are different')
-
-  const newNode: TextNode = { style, text: key }
-
-  if (
-    out.sindex + 1 < paragraph.length &&
-    out.caret.offset === node.text.length
-  ) {
-    const next = paragraph[out.sindex + 1]
-    if (stylesMatch(next.style, style)) {
-      // merge with next node
-      console.log('merge with next node')
-      const next = paragraph[out.sindex + 1]
-      const text = [next.text.slice(0, 1), key, next.text.slice(1)].join('')
-      paragraph[out.sindex + 1].text = text // update next node
-    } else {
-      // insert new node with different style
-      console.log('insert new node with different style')
-      paragraph.splice(out.sindex + 1, 0, newNode)
-    }
-  } else if (out.caret.offset < node.text.length) {
-    // split the current node and insert new
-    console.log('split the current node and insert new')
-    const text = node.text
-    const head = text.slice(0, out.caret.offset)
-    const tail = text.slice(out.caret.offset)
-
-    const rightNode: TextNode = { style: node.style, text: tail }
-
-    node.text = head
-    paragraph.splice(out.sindex + 1, 0, newNode)
-    paragraph.splice(out.sindex + 2, 0, rightNode)
-  } else {
-    // add new node to the end
-    console.log('add new node to the end')
-    paragraph.push(newNode)
-  }
-
-  out.caret.offset = 1
-  out.sindex++
-  return out
-}
-
-export function Delete(props: WriterProps): Object | null {
-  if (props.caret.offset === 0 && props.pindex === 0 && props.sindex === 0) {
-    // document start
-    return null
-  }
-
-  /* Paragraph deletion */
-
-  if (props.caret.offset === 0 && props.sindex === 0) {
-    // paragraph start
-    const left = props.paragraphs[props.pindex - 1]
-    const right = props.paragraphs[props.pindex]
-
-    const leftNode = left[left.length - 1]
-    const rightNode = right[0]
-
-    // left orig values
-    const textLength = leftNode.text.length
-    const spanCount = left.length
-
-    if (textLength === 0) {
-      // left is empty: right dominates left
-      props.paragraphs[props.pindex - 1] = right
-      props.paragraphs.splice(props.pindex, 1)
-      console.log('right dominates left')
-      return {
-        caret: { ...props.caret, offset: 0 },
-        pindex: props.pindex - 1,
-        sindex: props.sindex,
-        paragraphs: props.paragraphs,
-        direction: Direction.Delete
-      }
-    } else if (rightNode.text.length === 0) {
-      // right is empty: left dominates right
-      props.paragraphs.splice(props.pindex, 1)
-      console.log('left dominates right')
-      return {
-        caret: { ...props.caret, offset: textLength },
-        pindex: props.pindex - 1,
-        sindex: spanCount - 1,
-        paragraphs: props.paragraphs,
-        direction: Direction.Delete
-      }
-    }
-
-    // combine spans if they are of the same style
-    if (leftNode.style === rightNode.style) {
-      leftNode.text = leftNode.text.concat(rightNode.text)
-      if (right.length > 1) {
-        right.splice(0, 1)
-        left.push(...right)
-      }
-      props.paragraphs.splice(props.pindex, 1)
-      console.log('combine spans')
-      return {
-        caret: { ...props.caret, offset: textLength },
-        pindex: props.pindex - 1,
-        sindex: spanCount - 1,
-        paragraphs: props.paragraphs,
-        direction: Direction.Delete
-      }
-    }
-
-    // combine paragraphs only
-    left.push(...right)
-    props.paragraphs.splice(props.pindex, 1)
-    console.log('combine paragraphs')
-    return {
-      caret: { ...props.caret, offset: textLength },
-      pindex: props.pindex - 1,
-      sindex: spanCount - 1,
-      paragraphs: props.paragraphs,
-      direction: Direction.Delete
-    }
-  }
-
-  /* Span deletion */
-
-  const node = props.paragraphs[props.pindex][props.sindex]
-  const text = [
-    node.text.slice(0, props.caret.offset - 1),
-    node.text.slice(props.caret.offset)
-  ].join('')
-
-  if (text.length === 0 && props.sindex > 0) {
-    // delete node
-    props.paragraphs[props.pindex].splice(props.sindex, 1)
-    console.log('delete node')
-    return {
-      caret: {
-        ...props.caret,
-        offset: props.paragraphs[props.pindex][props.sindex - 1].text.length
-      },
-      pindex: props.pindex,
-      sindex: props.sindex - 1,
-      paragraphs: props.paragraphs,
-      direction: Direction.Delete
-    }
-  }
-
-  props.paragraphs[props.pindex][props.sindex].text = text
-  props.caret.offset--
-  if (props.caret.offset < 1 && props.sindex > 0) {
-    console.log('adjust placement')
-    props.caret.offset =
-      props.paragraphs[props.pindex][props.sindex - 1].text.length
-    props.sindex--
-  } else if (
-    props.caret.offset === 0 &&
-    props.paragraphs[props.pindex].length > 1
-  ) {
-    console.log('delete preceding span')
-    props.paragraphs[props.pindex].splice(0, 1)
-  }
-
-  return {
-    caret: props.caret,
-    pindex: props.pindex,
-    sindex: props.sindex,
-    paragraphs: props.paragraphs,
-    direction: Direction.Delete
-  }
-}
-
-export function Newline(props: WriterProps): {
-  paragraphs: Array<Array<TextNode>>
-  direction: Direction
-} {
-  console.log('new line:', props)
-
-  const paragraph = props.paragraphs[props.pindex]
-  const node = paragraph[props.sindex]
-  const text = node.text
-  const head = text.slice(0, props.caret.offset)
-  const tail = text.slice(props.caret.offset)
-
-  // copy paragraph
-  const newParagraph: Array<TextNode> = []
-  for (let i = props.sindex; i < paragraph.length; i++) {
-    newParagraph.push(paragraph[i])
-  }
-
-  // copy node
-  const style: Style = { ...node.style }
-  const newNode: TextNode = { style, text: tail }
-  newParagraph[0] = newNode
-
-  paragraph[props.sindex].text = head
-  paragraph.length = props.sindex + 1
-
-  const paragraphs = props.paragraphs
-  paragraphs[props.pindex] = paragraph
-  paragraphs.splice(props.pindex + 1, 0, newParagraph)
-
-  return { paragraphs, direction: Direction.NewLine }
-}
-
-// TODO: REPLACEMENT FUNCTIONS
-
-function WriteNew(
+function writeCharacter(
   paragraphs: Array<Array<TextNode>>,
-  pos: Position,
+  status: Status,
   key: string,
   style: Style
 ): void {
-  const paragraph = paragraphs[pos.pindex]
-  const node = paragraph[pos.sindex]
+  const paragraph = paragraphs[status.pindex]
+  const node = paragraph[status.sindex]
 
   if (stylesMatch(node.style, style)) {
     const text = [
-      node.text.slice(0, pos.caret.offset),
+      node.text.slice(0, status.offset),
       key, // Add new character
-      node.text.slice(pos.caret.offset)
+      node.text.slice(status.offset)
     ].join('')
     node.text = text
-    pos.caret.offset++
+    status.offset++
     return
   }
 
@@ -287,191 +48,271 @@ function WriteNew(
   const newNode: TextNode = { style, text: key }
 
   if (
-    pos.sindex + 1 < paragraph.length &&
-    pos.caret.offset === node.text.length
+    status.sindex + 1 < paragraph.length &&
+    status.offset === node.text.length
   ) {
-    const next = paragraph[pos.sindex + 1]
+    const next = paragraph[status.sindex + 1]
     if (stylesMatch(next.style, style)) {
-      // Merge with next node
       console.log('Merge with next node')
-      const next = paragraph[pos.sindex + 1]
+      const next = paragraph[status.sindex + 1]
       const text = [next.text.slice(0, 1), key, next.text.slice(1)].join('')
-      paragraph[pos.sindex + 1].text = text // Update next node
+      paragraph[status.sindex + 1].text = text // Update next node
     } else {
-      // Insert new node with different style
       console.log('Insert new node with different style')
-      paragraph.splice(pos.sindex + 1, 0, newNode)
+      paragraph.splice(status.sindex + 1, 0, newNode)
     }
-  } else if (pos.caret.offset < node.text.length) {
-    // Split the current node and insert new
+  } else if (status.offset < node.text.length) {
     console.log('Split the current node and insert new')
     const text = node.text
-    const head = text.slice(0, pos.caret.offset)
-    const tail = text.slice(pos.caret.offset)
+    const head = text.slice(0, status.offset)
+    const tail = text.slice(status.offset)
 
     const rightNode: TextNode = { style: node.style, text: tail }
 
     node.text = head
-    paragraph.splice(pos.sindex + 1, 0, newNode)
-    paragraph.splice(pos.sindex + 2, 0, rightNode)
+    paragraph.splice(status.sindex + 1, 0, newNode)
+    paragraph.splice(status.sindex + 2, 0, rightNode)
   } else {
-    // Add new node to the end
     console.log('Add new node to the end')
     paragraph.push(newNode)
   }
 
-  pos.caret.offset = 1
-  pos.sindex++
+  status.offset = 1
+  status.sindex++
 }
 
-function DeleteNew(paragraphs: Array<Array<TextNode>>, pos: Position): void {
-  if (pos.caret.offset === 0 && pos.pindex === 0 && pos.sindex === 0) {
-    // Document start
+function deleteAcrossParagraphs(
+  paragraphs: Array<Array<TextNode>>,
+  status: Status
+): void {
+  const prevParagraph = paragraphs[status.pindex - 1]
+  const prevNode = prevParagraph[prevParagraph.length - 1]
+  const prevNodeTextLength = prevNode.text.length
+  const prevParagraphLength = prevParagraph.length
+
+  const currParagraph = paragraphs[status.pindex]
+  const currNode = currParagraph[0]
+
+  if (prevNodeTextLength === 0) {
+    paragraphs[status.pindex - 1] = currParagraph
+    paragraphs.splice(status.pindex, 1)
+    console.log('Curr dominates prev')
+    status.pindex--
+    return
+  } else if (currNode.text.length === 0) {
+    paragraphs.splice(status.pindex, 1)
+    console.log('Prev dominates curr')
+    status.offset = prevNodeTextLength
+    status.pindex--
+    status.sindex = prevParagraphLength - 1
     return
   }
 
-  /* Paragraph deletion */
-
-  if (pos.caret.offset === 0 && pos.sindex === 0) {
-    // Paragraph start
-    const left = paragraphs[pos.pindex - 1]
-    const right = paragraphs[pos.pindex]
-
-    const leftNode = left[left.length - 1]
-    const rightNode = right[0]
-
-    // Left orig values
-    const textLength = leftNode.text.length
-    const spanCount = left.length
-
-    if (textLength === 0) {
-      // Left is empty: right dominates left
-      paragraphs[pos.pindex - 1] = right
-      paragraphs.splice(pos.pindex, 1)
-      console.log('Right dominates left')
-      pos.caret.offset = 0
-      pos.pindex -= 1
-      return
-    } else if (rightNode.text.length === 0) {
-      // Right is empty: left dominates right
-      paragraphs.splice(pos.pindex, 1)
-      console.log('Left dominates right')
-      pos.caret.offset = textLength
-      pos.pindex -= 1
-      pos.sindex = spanCount - 1
-      return
+  // Merge nodes if they are of the same style
+  if (prevNode.style === currNode.style) {
+    prevNode.text = prevNode.text.concat(currNode.text)
+    if (currParagraph.length > 1) {
+      currParagraph.splice(0, 1)
+      prevParagraph.push(...currParagraph)
     }
-
-    // Combine spans if they are of the same style
-    if (leftNode.style === rightNode.style) {
-      leftNode.text = leftNode.text.concat(rightNode.text)
-      if (right.length > 1) {
-        right.splice(0, 1)
-        left.push(...right)
-      }
-      paragraphs.splice(pos.pindex, 1)
-      console.log('Combine spans')
-      pos.caret.offset = textLength
-      pos.pindex -= 1
-      pos.sindex = spanCount - 1
-      return
-    }
-
-    // Combine paragraphs only
-    left.push(...right)
-    paragraphs.splice(pos.pindex, 1)
+    paragraphs.splice(status.pindex, 1)
+    console.log('Merge nodes')
+  } else {
+    prevParagraph.push(...currParagraph)
+    paragraphs.splice(status.pindex, 1)
     console.log('Combine paragraphs')
-    pos.caret.offset = textLength
-    pos.pindex -= 1
-    pos.sindex = spanCount - 1
-    return
   }
 
+  status.offset = prevNodeTextLength
+  status.pindex--
+  status.sindex = prevParagraphLength - 1
+}
+
+function deleteAcrossNodes(
+  paragraphs: Array<Array<TextNode>>,
+  status: Status
+): void {
   /* Span deletion */
 
-  const node = paragraphs[pos.pindex][pos.sindex]
-  const text = [
-    node.text.slice(0, pos.caret.offset - 1),
-    node.text.slice(pos.caret.offset)
+  const paragraph = paragraphs[status.pindex]
+  const node = paragraph[status.sindex]
+  const textAfterDeletion = [
+    node.text.slice(0, status.offset - 1),
+    node.text.slice(status.offset)
   ].join('')
 
-  if (text.length === 0 && pos.sindex > 0) {
-    // Delete node
-    paragraphs[pos.pindex].splice(pos.sindex, 1)
-    console.log('dDlete node')
-    pos.caret.offset = paragraphs[pos.pindex][pos.sindex - 1].text.length
-    pos.sindex -= 1
+  if (textAfterDeletion.length === 0) {
+    const isFirstNode = status.sindex === 0
+    const isOnlyNode = paragraph.length === 1
+
+    if (isFirstNode && isOnlyNode) {
+      console.log('Empty paragraph')
+      node.text = textAfterDeletion
+      status.offset = 0
+      return
+    }
+
+    if (isFirstNode && !isOnlyNode) {
+      console.log('Delete node')
+      paragraph.splice(status.sindex, 1)
+      status.offset = 0
+      return
+    }
+
+    console.log('Delete node')
+    const prevNode = paragraph[status.sindex - 1]
+    const prevNodeTextLength = prevNode.text.length
+
+    if (paragraph.length - 1 > status.sindex) {
+      const nextNode = paragraph[status.sindex + 1]
+      // Merge nodes if they are of the same style
+      if (prevNode.style === nextNode.style) {
+        console.log('Merge nodes')
+        prevNode.text = prevNode.text.concat(nextNode.text)
+        paragraph.splice(status.sindex, 1)
+      }
+    }
+
+    paragraph.splice(status.sindex, 1)
+    status.offset = prevNodeTextLength
+    status.sindex--
     return
   }
 
-  paragraphs[pos.pindex][pos.sindex].text = text
-  pos.caret.offset--
-  if (pos.caret.offset < 1 && pos.sindex > 0) {
+  node.text = textAfterDeletion
+  status.offset--
+
+  // Check if offset is between two nodes
+  if (status.offset === 0 && status.sindex > 0) {
+    const prevNode = paragraph[status.sindex - 1]
+    const prevNodeTextLength = prevNode.text.length
+
+    // Merge nodes if they are of the same style
+    if (node.style === prevNode.style) {
+      prevNode.text = prevNode.text.concat(node.text)
+      paragraph.splice(status.sindex, 1)
+      console.log('Merge nodes')
+      status.offset = prevNodeTextLength
+      status.sindex--
+      return
+    }
+
     console.log('Adjust placement')
-    pos.caret.offset = paragraphs[pos.pindex][pos.sindex - 1].text.length
-    pos.sindex--
-  } else if (pos.caret.offset === 0 && paragraphs[pos.pindex].length > 1) {
-    console.log('Delete preceding span')
-    paragraphs[pos.pindex].splice(0, 1)
+    status.offset = paragraph[status.sindex - 1].text.length
+    status.sindex--
   }
 }
 
-function NewlineNew(paragraphs: Array<Array<TextNode>>, pos: Position): void {
-  console.log('New line:', pos)
-
-  const paragraph = paragraphs[pos.pindex]
-  const node = paragraph[pos.sindex]
-  const text = node.text
-  const head = text.slice(0, pos.caret.offset)
-  const tail = text.slice(pos.caret.offset)
-
-  // Copy paragraph
-  const newParagraph: Array<TextNode> = []
-  for (let i = pos.sindex; i < paragraph.length; i++) {
-    newParagraph.push(paragraph[i])
+function deleteCharacter(
+  paragraphs: Array<Array<TextNode>>,
+  status: Status
+): void {
+  if (status.offset === 0 && status.pindex === 0 && status.sindex === 0) {
+    console.log('*Start of document*')
+    return
   }
 
-  // Copy node
-  const style: Style = { ...node.style }
-  const newNode: TextNode = { style, text: tail }
-  newParagraph[0] = newNode
+  if (status.offset === 0 && status.sindex === 0) {
+    deleteAcrossParagraphs(paragraphs, status)
+    return
+  }
 
-  paragraph[pos.sindex].text = head
-  paragraph.length = pos.sindex + 1
+  deleteAcrossNodes(paragraphs, status)
+  return
+}
 
-  paragraphs[pos.pindex] = paragraph
-  paragraphs.splice(pos.pindex + 1, 0, newParagraph)
+function insertNewline(
+  paragraphs: Array<Array<TextNode>>,
+  status: Status
+): void {
+  const paragraph = paragraphs[status.pindex]
+  const node = paragraph[status.sindex]
+  const text = node.text
+
+  // Split text at the offset
+  const left = text.slice(0, status.offset)
+  const right = text.slice(status.offset)
+
+  // Push affected nodes into a new paragraph
+  const newParagraph: Array<TextNode> = []
+  const isAtNodeEnd = status.offset === node.text.length
+  const isAtParagraphEnd = status.sindex === paragraph.length - 1
+
+  if (isAtNodeEnd && !isAtParagraphEnd) {
+    // Offset is between two nodes
+    for (let sindex = status.sindex + 1; sindex < paragraph.length; sindex++) {
+      newParagraph.push(paragraph[sindex])
+    }
+  } else if (isAtNodeEnd && isAtNodeEnd) {
+    // Offset is at the end of a paragraph
+    const style: Style = { ...node.style }
+    const emptyNode: TextNode = { style, text: '' }
+    newParagraph.push(emptyNode)
+  } else {
+    // Offset is somewhere else
+    for (let sindex = status.sindex; sindex < paragraph.length; sindex++) {
+      newParagraph.push(paragraph[sindex])
+    }
+    const style: Style = { ...node.style }
+    const newNode: TextNode = { style, text: right }
+    newParagraph[0] = newNode
+  }
+
+  // Update original paragraph
+  paragraph[status.sindex].text = left
+  paragraph.length = status.sindex + 1
+
+  // Update paragraphs array
+  paragraphs[status.pindex] = paragraph
+  paragraphs.splice(status.pindex + 1, 0, newParagraph)
 }
 
 export function editParagraphs(
   action: Action,
   paragraphs: Array<Array<TextNode>>,
-  pos: Position,
+  oldPos: Position,
   key?: string,
   style?: Style
 ): {
+  caret: Caret
+  pindex: number
+  sindex: number
   paragraphs: Array<Array<TextNode>>
-  pos: Position
   direction: Direction
 } {
   console.log(' * * * EDITING * * * ')
 
-  let direction: Direction
+  const pos: Coordinates = { x: oldPos.caret.x, y: oldPos.caret.y }
+  const status: Status = {
+    offset: oldPos.caret.offset,
+    pindex: oldPos.pindex,
+    sindex: oldPos.sindex
+  }
+
+  let direction: Direction = Direction.Write
 
   switch (action) {
     case Action.Write:
-      WriteNew(paragraphs, pos, key!, style!)
+      writeCharacter(paragraphs, status, key!, style!)
       direction = Direction.Write
       break
     case Action.Delete:
-      DeleteNew(paragraphs, pos)
+      deleteCharacter(paragraphs, status)
       direction = Direction.Delete
       break
     case Action.NewLine:
-      NewlineNew(paragraphs, pos)
+      insertNewline(paragraphs, status)
       direction = Direction.NewLine
       break
   }
 
-  return { paragraphs, pos, direction }
+  // TODO: Delete
+  const oldRes = {
+    caret: { offset: status.offset, x: pos.x, y: pos.y },
+    pindex: status.pindex,
+    sindex: status.sindex,
+    paragraphs,
+    direction
+  }
+  return oldRes
 }

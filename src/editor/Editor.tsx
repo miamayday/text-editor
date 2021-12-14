@@ -103,7 +103,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
    * Calls the Writer to edit paragraphs.
    *
    * Possible actions: Write, Delete, Newline.
-   * @see Writer.tsx
+   * @see Writer.ts
    */
   edit(): void {
     if (
@@ -115,53 +115,21 @@ class Editor extends React.Component<EditorProps, EditorState> {
       return
     }
 
-    const testNewFunctions = false // TODO:
-    if (testNewFunctions) {
-      const pos: Position = {
-        caret: this.state.caret,
-        pindex: this.state.pindex,
-        sindex: this.state.sindex
-      }
-
-      // This is the function that will replace the old ones...
-      const state = Writer.editParagraphs(
-        this.state.action,
-        this.state.paragraphs,
-        pos,
-        this.state.key,
-        this.state.style
-      )
-
-      this.setState({ ...this.state, ...state, action: undefined })
-      return
-    }
-
-    const props: WriterProps = {
+    const pos: Position = {
       caret: this.state.caret,
       pindex: this.state.pindex,
-      sindex: this.state.sindex,
-      paragraphs: this.state.paragraphs
+      sindex: this.state.sindex
     }
 
-    switch (this.state.action) {
-      case Action.Write:
-        console.log('Write', this.state.key)
-        if (this.state.key !== undefined) {
-          this.setState(Writer.Write(props, this.state.key, this.state.style))
-        }
-        break
-      case Action.Delete:
-        const state = Writer.Delete(props)
-        if (state !== null) {
-          this.setState({ ...this.state, ...state })
-        }
-        break
-      case Action.NewLine:
-        this.setState(Writer.Newline(props))
-        break
-    }
+    const state = Writer.editParagraphs(
+      this.state.action,
+      this.state.paragraphs,
+      pos,
+      this.state.key,
+      this.state.style
+    )
 
-    this.setState({ action: undefined })
+    this.setState({ ...state, action: undefined })
   }
 
   /* EVENT HANDLERS */

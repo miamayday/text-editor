@@ -1,6 +1,6 @@
-/* Helper functions used by Setter.tsx and Mover.tsx */
+/* Helper functions used by Setter.ts and Mover.ts */
 
-import { TextNode, Status, Position } from '../Types'
+import { TextNode, Status } from '../Types'
 
 // TODO:
 class OffsetIterator {
@@ -12,14 +12,14 @@ class OffsetIterator {
   private slen: number = 0
   private plen: number = 0
 
-  constructor(paragraphs: Array<Array<TextNode>>, pos: Position) {
+  constructor(paragraphs: Array<Array<TextNode>>, status: Status) {
     this.paragraphs = paragraphs
-    this.offset = pos.caret.offset
-    this.pindex = pos.pindex
-    this.sindex = pos.sindex
+    this.offset = status.offset
+    this.pindex = status.pindex
+    this.sindex = status.sindex
 
-    const p = paragraphs[pos.pindex]
-    const s = p[pos.sindex]
+    const p = paragraphs[status.pindex]
+    const s = p[status.sindex]
     this.slen = s.text.length
     this.plen = p.length
   }
