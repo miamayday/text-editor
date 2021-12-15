@@ -12,7 +12,11 @@ class App extends React.Component<AppProps, AppState> {
   }
 
   render() {
-    return <Editor />
+    return (
+      <div className="app">
+        <Editor />
+      </div>
+    )
   }
 }
 

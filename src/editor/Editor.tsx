@@ -252,7 +252,8 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
     if (event.target instanceof HTMLElement) {
       const el = event.target
-      if (el.className && el.className === 'app') {
+      const classes = ['paragraph', 'text-node']
+      if (el.className && !classes.includes(el.className)) {
         console.log('Clicked outside')
         this.setState({ caret: false })
       }
@@ -312,66 +313,77 @@ class Editor extends React.Component<EditorProps, EditorState> {
 
   render() {
     return (
-      <div
-        className="app"
-        onClick={this.handleClickOutside}
-        onKeyDown={this.handleKeyDown}
-        tabIndex={0} // Cannot write otherwise
-      >
-        <div className="editor">
-          <div className="toolbar mb30 editor-block">
-            <BoldIcon
-              className={
-                this.state.style.bold ? 'toolbar-icon active' : 'toolbar-icon'
-              }
-              onClick={this.handleBoldClick}
-            />
-            <ItalicIcon
-              className={
-                this.state.style.italic ? 'toolbar-icon active' : 'toolbar-icon'
-              }
-              onClick={this.handleItalicClick}
-            />
-            <span className="status">
-              offset: {this.state.caret && this.state.status!.offset}
-            </span>
-            <span className="status">
-              pindex: {this.state.caret && this.state.status!.pindex}
-            </span>
-            <span className="status">
-              sindex: {this.state.caret && this.state.status!.sindex}
-            </span>
+      <div className="editor" onClick={this.handleClickOutside}>
+        <div className="panel-wrapper">
+          <div className="side panel">
+            <div className="status block">
+              <div className="annotation">
+                <span>Offset</span>
+                <span>{this.state.caret && this.state.status!.offset}</span>
+              </div>
+              <div className="annotation">
+                <span>Pindex</span>
+                <span>{this.state.caret && this.state.status!.pindex}</span>
+              </div>
+              <div className="annotation">
+                <span>Sindex</span>
+                <span>{this.state.caret && this.state.status!.sindex}</span>
+              </div>
+            </div>
           </div>
-          <div className="document" onClick={this.handleClick}>
-            {this.state.caret && (
-              <div className="caret" style={this.caretToCSSProps()}></div>
-            )}
-            {this.state.paragraphs.map((p, i) => (
-              <p key={`p-${i}`} p-index={i} className="paragraph">
-                {p.map((node, j) => (
-                  <span
-                    key={`span-${i}-${j}`}
-                    p-index={i}
-                    s-index={j}
-                    className="text-node"
-                    style={this.nodeToCSSProps(node.style)}
-                  >
-                    {node.text}
-                  </span>
-                ))}
-              </p>
-            ))}
+          <div
+            className="main panel"
+            onKeyDown={this.handleKeyDown}
+            tabIndex={0} // Cannot write otherwise
+          >
+            <div className="toolbar block">
+              <BoldIcon
+                className={
+                  this.state.style.bold ? 'toolbar-icon active' : 'toolbar-icon'
+                }
+                onClick={this.handleBoldClick}
+              />
+              <ItalicIcon
+                className={
+                  this.state.style.italic
+                    ? 'toolbar-icon active'
+                    : 'toolbar-icon'
+                }
+                onClick={this.handleItalicClick}
+              />
+            </div>
+            <div className="document block" onClick={this.handleClick}>
+              {this.state.caret && (
+                <div className="caret" style={this.caretToCSSProps()}></div>
+              )}
+              {this.state.paragraphs.map((p, i) => (
+                <p key={`p-${i}`} p-index={i} className="paragraph">
+                  {p.map((node, j) => (
+                    <span
+                      key={`span-${i}-${j}`}
+                      p-index={i}
+                      s-index={j}
+                      className="text-node"
+                      style={this.nodeToCSSProps(node.style)}
+                    >
+                      {node.text}
+                    </span>
+                  ))}
+                </p>
+              ))}
+            </div>
+            <div className="block">
+              Icons made by{' '}
+              <a href="https://www.flaticon.com/authors/google" title="Google">
+                Google
+              </a>{' '}
+              from{' '}
+              <a href="https://www.flaticon.com/" title="Flaticon">
+                www.flaticon.com
+              </a>
+            </div>
           </div>
-          <div className="editor-block mt30">
-            Icons made by{' '}
-            <a href="https://www.flaticon.com/authors/google" title="Google">
-              Google
-            </a>{' '}
-            from{' '}
-            <a href="https://www.flaticon.com/" title="Flaticon">
-              www.flaticon.com
-            </a>
-          </div>
+          <div className="side panel"></div>
         </div>
       </div>
     )
