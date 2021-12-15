@@ -12,14 +12,7 @@
    Main function calculateCaretPosition is at the bottom. */
 
 import * as Coords from './Coords'
-import {
-  Position,
-  Caret,
-  TextNode,
-  Direction,
-  Coordinates,
-  Status
-} from '../Types'
+import { TextNode, Direction, Coordinates, Status } from '../Types'
 import { moveOffset } from './Helper'
 import config from '../../config'
 
@@ -325,15 +318,9 @@ function calculateVertical(
 export function calculateCaretPosition(
   direction: Direction,
   paragraphs: Array<Array<TextNode>>,
-  caret: Caret,
-  pindex: number,
-  sindex: number
-): Position {
-  const pos: Coordinates = { x: caret.x, y: caret.y }
-  const status: Status = { offset: caret.offset, pindex, sindex }
-
-  console.log(' * * * CARET MOVEMENT * * * ')
-
+  pos: Coordinates,
+  status: Status
+): { pos: Coordinates; status: Status } {
   switch (direction) {
     case Direction.Up:
       calculateVertical(true, paragraphs, pos, status)
@@ -358,11 +345,5 @@ export function calculateCaretPosition(
       break
   }
 
-  // TODO: Delete
-  const oldPos: Position = {
-    caret: { offset: status.offset, x: pos.x, y: pos.y },
-    pindex: status.pindex,
-    sindex: status.sindex
-  }
-  return oldPos
+  return { pos, status }
 }

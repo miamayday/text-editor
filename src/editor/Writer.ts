@@ -7,16 +7,7 @@
    
    Main function editParagraphs is at the bottom. */
 
-import {
-  TextNode,
-  Style,
-  Direction,
-  Caret,
-  Action,
-  Position,
-  Coordinates,
-  Status
-} from './Types'
+import { TextNode, Style, Direction, Action, Status } from './Types'
 
 function stylesMatch(s1: Style, s2: Style): Boolean {
   return s1.bold === s2.bold && s1.italic === s2.italic
@@ -268,25 +259,14 @@ function insertNewline(
 export function editParagraphs(
   action: Action,
   paragraphs: Array<Array<TextNode>>,
-  oldPos: Position,
+  status: Status,
   key?: string,
   style?: Style
 ): {
-  caret: Caret
-  pindex: number
-  sindex: number
   paragraphs: Array<Array<TextNode>>
+  status: Status
   direction: Direction
 } {
-  console.log(' * * * EDITING * * * ')
-
-  const pos: Coordinates = { x: oldPos.caret.x, y: oldPos.caret.y }
-  const status: Status = {
-    offset: oldPos.caret.offset,
-    pindex: oldPos.pindex,
-    sindex: oldPos.sindex
-  }
-
   let direction: Direction = Direction.Write
 
   switch (action) {
@@ -304,13 +284,5 @@ export function editParagraphs(
       break
   }
 
-  // TODO: Delete
-  const oldRes = {
-    caret: { offset: status.offset, x: pos.x, y: pos.y },
-    pindex: status.pindex,
-    sindex: status.sindex,
-    paragraphs,
-    direction
-  }
-  return oldRes
+  return { paragraphs, status, direction }
 }

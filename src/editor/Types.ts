@@ -14,17 +14,6 @@ export type TextNode = {
 
 export type EditorProps = {}
 
-export type Caret = {
-  offset: number
-  x: number
-  y: number
-}
-
-export type Mouse = {
-  x: number
-  y: number
-}
-
 export enum Direction {
   Up = 1,
   Down,
@@ -43,34 +32,16 @@ export enum Action {
 
 export type EditorState = {
   style: Style
-  caret?: Caret
-  mouse?: Mouse // a pink square that acts a snapping guide
-  direction?: Direction // caret guide
-  action?: Action // writer guide
+  caret: boolean
+  pos?: Coordinates // caret coordinates (relative to document)
+  status?: Status // caret status (offset, pindex, sindex)
+  direction?: Direction // caret instruction
+  action?: Action // writer instruction
   key?: string // input key
-  pindex?: number
-  sindex?: number
   paragraphs: Array<Array<TextNode>>
 }
 
-/* Caret */
-
-export type Position = {
-  caret: Caret
-  pindex: number
-  sindex: number
-}
-
-/* Writer */
-
-export interface WriterProps {
-  caret: Caret
-  pindex: number
-  sindex: number
-  paragraphs: Array<Array<TextNode>>
-}
-
-/* Replacements */
+/* New types */
 
 export type Status = {
   offset: number

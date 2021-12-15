@@ -9,7 +9,6 @@ import {
   EditorState,
   Direction,
   Action,
-  Position,
   Coordinates,
   Status
 } from './Types'
@@ -20,14 +19,17 @@ import * as Writer from './Writer'
 // Example paragraphs
 import { examples } from './Examples'
 
+const defaultStyle: Style = {
+  bold: false,
+  italic: false
+}
+
 class Editor extends React.Component<EditorProps, EditorState> {
   constructor(props: EditorProps) {
     super(props)
     this.state = {
-      style: {
-        bold: false,
-        italic: false
-      },
+      style: defaultStyle,
+      caret: false,
       paragraphs: examples
     }
 
@@ -51,6 +53,10 @@ class Editor extends React.Component<EditorProps, EditorState> {
     }
   }
 
+  getStyle(status: Status): Style {
+    return this.state.paragraphs[status.pindex][status.sindex].style
+  }
+
   /* CARET NAVIGATION */
 
   /**
@@ -59,41 +65,46 @@ class Editor extends React.Component<EditorProps, EditorState> {
    * @see moveVertical function in caret/Mover.ts
    */
   moveCaret(): void {
-    if (
-      this.state.caret === undefined ||
-      this.state.pindex === undefined ||
-      this.state.sindex === undefined ||
-      this.state.direction === undefined
-    ) {
+    if (!this.state.caret) {
       return
     }
 
-    const pos: Position = CaretMover.calculateCaretPosition(
-      this.state.direction,
+    const { pos, status } = CaretMover.calculateCaretPosition(
+      this.state.direction!,
       this.state.paragraphs,
-      this.state.caret,
-      this.state.pindex,
-      this.state.sindex
+      this.state.pos!,
+      this.state.status!
     )
 
-    const style = this.state.paragraphs[pos.pindex][pos.sindex].style
-    this.setState({ ...this.state, ...pos, style, direction: undefined })
+    const style = this.getStyle(status)
+    this.setState({
+      pos,
+      status,
+      style,
+      direction: undefined
+    })
   }
 
   /**
    * Calls the Setter to calculate the caret position.
    * @see calculateCaretPosition function in caret/Setter.ts
    */
-  setCaret(el: HTMLElement, client: Coordinates, status: Status): void {
-    const pos: Position = CaretSetter.calculateCaretPosition(
+  setCaret(el: HTMLElement, client: Coordinates, initialStatus: Status): void {
+    const { pos, status } = CaretSetter.calculateCaretPosition(
       this.state.paragraphs,
       el,
       client,
-      status
+      initialStatus
     )
 
-    const style = this.state.paragraphs[pos.pindex][pos.sindex].style
-    this.setState({ ...this.state, ...pos, style, direction: undefined })
+    const style = this.getStyle(status)
+    this.setState({
+      caret: true,
+      pos,
+      status,
+      style,
+      direction: undefined
+    })
   }
 
   /* EDITING (writing, deleting, inserting a newline) */
@@ -105,30 +116,18 @@ class Editor extends React.Component<EditorProps, EditorState> {
    * @see Writer.ts
    */
   edit(): void {
-    if (
-      this.state.caret === undefined ||
-      this.state.pindex === undefined ||
-      this.state.sindex === undefined ||
-      this.state.action === undefined
-    ) {
+    if (!this.state.caret || this.state.action === undefined) {
       return
     }
 
-    const pos: Position = {
-      caret: this.state.caret,
-      pindex: this.state.pindex,
-      sindex: this.state.sindex
-    }
-
-    const state = Writer.editParagraphs(
+    const newState = Writer.editParagraphs(
       this.state.action,
       this.state.paragraphs,
-      pos,
+      this.state.status!,
       this.state.key,
       this.state.style
     )
-
-    this.setState({ ...state, action: undefined })
+    this.setState({ ...newState, action: undefined })
   }
 
   /* EVENT HANDLERS */
@@ -140,8 +139,6 @@ class Editor extends React.Component<EditorProps, EditorState> {
    * @param event onKeyDown event on div.app
    */
   handleKeyDown(event: React.KeyboardEvent): void {
-    console.log(`Pressed '${event.key}'`)
-
     // These cause problems otherwise
     // Firefox may still act up TODO:
     const avoid = ['ArrowUp', 'ArrowDown', ' ']
@@ -149,11 +146,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
       event.preventDefault()
     }
 
-    if (
-      this.state.caret === undefined ||
-      this.state.pindex === undefined ||
-      this.state.sindex === undefined
-    ) {
+    if (!this.state.caret) {
       return // Do nothing if caret has not been set
     }
 
@@ -204,12 +197,6 @@ class Editor extends React.Component<EditorProps, EditorState> {
         return // Rare occurence
       } else if (el.className !== 'text-node' && el.className !== 'paragraph') {
         console.log('Clicked on unknown element')
-        this.setState({
-          caret: undefined,
-          direction: undefined,
-          pindex: undefined,
-          sindex: undefined
-        })
         return
       }
 
@@ -257,7 +244,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
   }
 
   /**
-   * Vanishes the caret, since the user clicked outside the document.
+   * Vanishes the caret, since the user clicked outside the app.
    * @param event onClick event on div.app
    */
   handleClickOutside(event: React.MouseEvent): void {
@@ -266,13 +253,8 @@ class Editor extends React.Component<EditorProps, EditorState> {
     if (event.target instanceof HTMLElement) {
       const el = event.target
       if (el.className && el.className === 'app') {
-        console.log('clicked outside')
-        this.setState({
-          caret: undefined,
-          direction: undefined,
-          pindex: undefined,
-          sindex: undefined
-        })
+        console.log('Clicked outside')
+        this.setState({ caret: false })
       }
     }
   }
@@ -319,14 +301,13 @@ class Editor extends React.Component<EditorProps, EditorState> {
    * @returns Left and top values for the caret
    */
   caretToCSSProps(): React.CSSProperties {
-    if (this.state.caret !== undefined) {
+    if (this.state.caret) {
       return {
-        left: this.state.caret.x + 'px',
-        top: this.state.caret.y + 'px'
+        left: this.state.pos!.x + 'px',
+        top: this.state.pos!.y + 'px'
       }
-    } else {
-      return {}
     }
+    return {}
   }
 
   render() {
@@ -352,13 +333,13 @@ class Editor extends React.Component<EditorProps, EditorState> {
               onClick={this.handleItalicClick}
             />
             <span className="status">
-              offset: {this.state.caret && this.state.caret.offset}
+              offset: {this.state.caret && this.state.status!.offset}
             </span>
             <span className="status">
-              pindex: {this.state.pindex && this.state.pindex}
+              pindex: {this.state.caret && this.state.status!.pindex}
             </span>
             <span className="status">
-              sindex: {this.state.sindex && this.state.sindex}
+              sindex: {this.state.caret && this.state.status!.sindex}
             </span>
           </div>
           <div className="document" onClick={this.handleClick}>

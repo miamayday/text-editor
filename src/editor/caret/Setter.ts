@@ -9,7 +9,7 @@
    Main function calculateCaretPosition is at the bottom. */
 
 import * as Coords from './Coords'
-import { Coordinates, Position, Status, TextNode } from '../Types'
+import { Coordinates, Status, TextNode } from '../Types'
 import { moveOffset } from './Helper'
 import config from '../../config'
 
@@ -373,7 +373,7 @@ export function calculateCaretPosition(
   el: HTMLElement,
   client: Coordinates,
   status: Status
-): Position {
+): { pos: Coordinates; status: Status } {
   // The document element which contains the paragraph elements
   const d = document.querySelectorAll('.document')[0]
   // The bounds of the document relative to the viewport
@@ -385,7 +385,6 @@ export function calculateCaretPosition(
   const pos: Coordinates = { x: 0, y: 0 }
   const mouse: Coordinates = { x: mouseX, y: mouseY }
 
-  console.log(' * * * CARET SETTING * * * ')
   console.log('focusOffset:', status.offset)
 
   if (el.className === 'text-node') {
@@ -394,11 +393,5 @@ export function calculateCaretPosition(
     calculateForParagraph(pos, status, paragraphs, el, mouse)
   }
 
-  // TODO: Delete
-  const oldPos: Position = {
-    caret: { offset: status.offset, x: pos.x, y: pos.y },
-    pindex: status.pindex,
-    sindex: status.sindex
-  }
-  return oldPos
+  return { pos, status }
 }
