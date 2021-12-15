@@ -1,5 +1,11 @@
 scroll pushing when caret moves out of view
 
+New issue:
+1. Click first position of last paragraph
+2. Press backspace
+3. Click last position of last paragraph
+4. focusOffset refers to somewhere else
+
 selection...
 fix up writer mess
 config to css

@@ -122,8 +122,6 @@ function deleteAcrossNodes(
   paragraphs: Array<Array<TextNode>>,
   status: Status
 ): void {
-  /* Span deletion */
-
   const paragraph = paragraphs[status.pindex]
   const node = paragraph[status.sindex]
   const textAfterDeletion = [
