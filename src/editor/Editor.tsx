@@ -319,7 +319,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
         tabIndex={0} // Cannot write otherwise
       >
         <div className="editor">
-          <div className="toolbar">
+          <div className="toolbar mb30 editor-block">
             <BoldIcon
               className={
                 this.state.style.bold ? 'toolbar-icon active' : 'toolbar-icon'
@@ -361,6 +361,16 @@ class Editor extends React.Component<EditorProps, EditorState> {
                 ))}
               </p>
             ))}
+          </div>
+          <div className="editor-block mt30">
+            Icons made by{' '}
+            <a href="https://www.flaticon.com/authors/google" title="Google">
+              Google
+            </a>{' '}
+            from{' '}
+            <a href="https://www.flaticon.com/" title="Flaticon">
+              www.flaticon.com
+            </a>
           </div>
         </div>
       </div>

@@ -1,5 +1,34 @@
+:root {
+  --border-color: #e0e3ff;
+  --scrollbar-track-color: #f8f8f8;
+  --scrollbar-thumb-color: #e0e3ff;
+  --text-color: #a8b0d3;
+  --link-color: #8997d6;
+  --gutter: 6px;
+}
+
 *:focus {
   outline: none; /* TODO: */
+}
+
+html {
+  background-color: #f8f8f8;
+  overflow: hidden;
+}
+
+.mt30 {
+  margin-top: 30px;
+}
+
+.mb30 {
+  margin-bottom: 30px;
+}
+
+.editor-block {
+  background-color: #fff;
+  border: 1px solid var(--border-color);
+  padding: var(--gutter);
+  color: var(--text-color);
 }
 
 .app {
@@ -17,39 +46,66 @@
   width: 700px;
 }
 
-.editor {
-  scrollbar-width: auto !important;
-  scrollbar-color: #dfdfdf #f1f1f1 !important;
-}
-
 .editor:focus {
   outline: none;
+}
+
+/* Links */
+
+.editor a {
+  color: var(--link-color);
+}
+
+/* Scrollbar for Firefox */
+
+.editor {
+  scrollbar-width: auto;
+  scrollbar-color: var(--scrollbar-thumb-color) var(--scrollbar-track-color);
+}
+
+/* Scrollbar for Chrome, Edge, Safari, Opera */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb-color);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-color);
 }
 
 /* Status */
 
 .status {
-  color: rgb(168, 176, 211);
   margin-right: 10px;
 }
 
 /* Toolbar */
 
 .toolbar {
-  border: 1px solid rgb(210, 214, 248);
-  /*margin-top: 30px;*/
-  margin-bottom: 30px;
+  border: 1px solid var(--border-color);
   display: flex;
   flex-direction: row;
   align-items: center;
+  background-color: rgb(255, 255, 255);
 }
 
 .toolbar-icon {
   height: 20px;
   width: 20px;
-  padding: 8px;
-  margin: 6px;
+  padding: var(--gutter);
   background: rgb(236, 236, 236);
+}
+
+.toolbar > .toolbar-icon:not(:last-child) {
+  margin-right: var(--gutter);
 }
 
 .toolbar-icon.active {
@@ -59,10 +115,6 @@
 /*.toolbar-icon.active:hover {
   background: rgb(212, 220, 255);
 }*/
-
-.toolbar-icon:not(:first-child) {
-  margin-left: 0;
-}
 
 /*.toolbar-icon:hover {
   background: rgb(228, 228, 228);
@@ -91,6 +143,7 @@
 /* Document */
 
 .document {
+  border: 1px solid var(--border-color);
   position: relative;
   height: 300px;
   /*cursor: text;*/
@@ -99,6 +152,7 @@
   scrollbar-width: auto !important;
   scrollbar-color: #dfdfdf #f1f1f1 !important;
   /*margin-bottom: 30px;*/
+  background-color: #ffffff;
 }
 
 .caret {
@@ -128,6 +182,7 @@
   /*overflow-x: auto;
   white-space: pre-wrap;
   word-wrap: break-word;*/
+  text-align: justify;
 }
 
 .paragraph span {
@@ -143,10 +198,10 @@
   white-space: pre-wrap;
   overflow-wrap: break-word;
   word-wrap: break-word;
-  word-break: break-all;
   word-break: break-word;
+  /*word-break: break-all;*/
   /*hyphens: auto;*/
-  background-color: rgb(211, 226, 255);
+  background-color: rgb(223, 233, 255);
 }
 
 /*.paragraph span:empty:before {

@@ -1,5 +1,7 @@
 /* This file contains helpful functionality for computing caret coordinates. */
 
+import config from '../../config'
+
 export function getParagraphElement(pindex: number): HTMLElement {
   return document.querySelectorAll('.paragraph')[pindex] as HTMLElement
 }
@@ -28,7 +30,7 @@ export function getDocumentCoords(
   const d = document.querySelectorAll('.document')[0]
   const cont = d.getBoundingClientRect()
   let [x, y] = getViewportCoords(span, offset)
-  x = x - cont.left
-  y = y - cont.top + d.scrollTop
+  x = x - cont.left - config.BORDER
+  y = y - cont.top + d.scrollTop - config.BORDER
   return [x, y]
 }

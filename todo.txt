@@ -12,6 +12,3 @@ config to css
 
 rich editing
 footer
-
-! removes undefined/null
-? adds undefined or sth
