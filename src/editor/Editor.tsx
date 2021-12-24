@@ -330,6 +330,16 @@ class Editor extends React.Component<EditorProps, EditorState> {
                 <span>{this.state.caret && this.state.status!.sindex}</span>
               </div>
             </div>
+            <div className="status block">
+              <div className="annotation">
+                <span>X</span>
+                <span>{this.state.caret && this.state.pos!.x}</span>
+              </div>
+              <div className="annotation">
+                <span>Y</span>
+                <span>{this.state.caret && this.state.pos!.y}</span>
+              </div>
+            </div>
           </div>
           <div
             className="main panel"

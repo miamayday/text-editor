@@ -12,3 +12,6 @@ config to css
 
 rich editing
 footer
+
+if special style and click default
+> keep special
