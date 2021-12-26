@@ -13,7 +13,7 @@ function stylesMatch(s1: Style, s2: Style): Boolean {
   return s1.bold === s2.bold && s1.italic === s2.italic
 }
 
-function writeCharacter(
+export function writeCharacter(
   paragraphs: Array<Array<TextNode>>,
   status: Status,
   key: string,
@@ -23,6 +23,7 @@ function writeCharacter(
   const node = paragraph[status.sindex]
 
   if (stylesMatch(node.style, style)) {
+    console.log('Styles match')
     const text = [
       node.text.slice(0, status.offset),
       key, // Add new character
@@ -45,10 +46,10 @@ function writeCharacter(
     if (stylesMatch(next.style, style)) {
       console.log('Merge with next node')
       const next = paragraph[status.sindex + 1]
-      const text = [next.text.slice(0, 1), key, next.text.slice(1)].join('')
+      const text = key.concat(next.text)
       paragraph[status.sindex + 1].text = text // Update next node
     } else {
-      console.log('Insert new node with different style')
+      console.log('Insert new node to the end of a node')
       paragraph.splice(status.sindex + 1, 0, newNode)
     }
   } else if (status.offset < node.text.length) {
@@ -62,11 +63,23 @@ function writeCharacter(
     node.text = head
     paragraph.splice(status.sindex + 1, 0, newNode)
     paragraph.splice(status.sindex + 2, 0, rightNode)
-  } else {
-    console.log('Add new node to the end')
+  } else if (node.text.length > 0) {
+    console.log('Add new node to the end to the end of a paragraph')
     paragraph.push(newNode)
+  } else {
+    console.log('Write to an empty paragraph')
+    node.text = key
+    status.offset = 1
+    status.sindex = 0
+    // Adopt the editor style
+    node.style.bold = style.bold
+    node.style.italic = style.italic
+    return
   }
 
+  // Since it's a new node within the same paragraph:
+  // * Reset offset to 1
+  // * Increment span index
   status.offset = 1
   status.sindex++
 }
