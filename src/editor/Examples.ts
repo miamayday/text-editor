@@ -14,6 +14,20 @@ function normal(): Style {
   return { bold: false, italic: false }
 }
 
+/*type Options = {
+  nodes: number
+}
+
+function generateParagraphs(options: Array<number>) {
+  const paragraphs: Array<Array<TextNode>> = []
+  for (const nodeCount of options) {
+    const paragraph: Array<TextNode> = []
+    for (let i = 0; i < nodeCount; i++) {
+      const node: TextNode = {}
+    }
+  }
+}*/
+
 export function generateExamples() {
   const n1: TextNode = {
     style: normal(),

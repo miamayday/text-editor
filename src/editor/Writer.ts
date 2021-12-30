@@ -204,7 +204,7 @@ function deleteAcrossNodes(
   }
 }
 
-function deleteCharacter(
+export function deleteCharacter(
   paragraphs: Array<Array<TextNode>>,
   status: Status
 ): void {

@@ -1,6 +1,51 @@
+/* Examples must include:
+- at least one paragraph with:
+  - at least two nodes
+- an empty paragraph
+*/
+
 import { writeCharacter } from '../../editor/Writer'
-import { examples, generateExamples } from '../../editor/Examples'
+import { generateExamples } from '../../editor/Examples'
 import { Status, TextNode, Style } from '../../editor/Types'
+
+/*const styles: Array<Style> = [
+  { bold: false, italic: false },
+  { bold: false, italic: true },
+  { bold: true, italic: false },
+  { bold: true, italic: true }
+]
+
+class StyleGenerator {
+  index: number = -1
+
+  next() {
+    if (this.index === styles.length - 1) {
+      this.index = 0
+    } else {
+      this.index++
+    }
+    return styles[this.index]
+  }
+}
+
+const style = new StyleGenerator()
+
+function generateParagraphs(plan: Array<number>): Array<Array<TextNode>> {
+  const document: Array<Array<TextNode>> = []
+
+  for (const nodeCount of plan) {
+    const paragraph: Array<TextNode> = []
+
+    for (let i = 0; i < nodeCount; i++) {
+      const node: TextNode = { style: style.next(), text: 'lol' }
+      paragraph.push(node)
+    }
+
+    document.push(paragraph)
+  }
+
+  return document
+}*/
 
 let paragraphs: Array<Array<TextNode>> = []
 
@@ -13,12 +58,6 @@ function generateIndex(min: number, max: number) {
 
 function generateKey() {
   return characters.charAt(Math.floor(Math.random() * characters.length))
-}
-
-function generateStyle() {
-  const bold = Math.round(Math.random()) === 1 ? false : true
-  const italic = Math.round(Math.random()) === 1 ? false : true
-  return { bold, italic }
 }
 
 function chooseDifferentStyle(s1: Style, s2: Style) {
@@ -41,13 +80,13 @@ function printBeforeWrite(status: Status, key: string, style: Style) {
     Key to be written: ${key}
     Status: ${status.pindex} ${status.sindex} ${status.offset}
     Editor style:
-    – bold: ${style.bold}
-    – italic: ${style.italic}
+    - bold: ${style.bold}
+    - italic: ${style.italic}
     `
   )
 }
 
-describe('writeCharacter: Writes a character correctly', () => {
+describe('function writeCharacter: Writes a character correctly', () => {
   beforeEach(() => {
     paragraphs = generateExamples()
   })
@@ -66,7 +105,7 @@ describe('writeCharacter: Writes a character correctly', () => {
 
     const node = paragraphs[status.pindex][status.sindex]
 
-    expect(node.text[status.offset - 1]).toMatch(key)
+    expect(node.text[status.offset - 1]).toEqual(key)
   })
 
   test('When merging with the next node', () => {
@@ -89,7 +128,7 @@ describe('writeCharacter: Writes a character correctly', () => {
 
     const node = paragraphs[status.pindex][status.sindex]
 
-    expect(node.text[status.offset - 1]).toMatch(key)
+    expect(node.text[status.offset - 1]).toEqual(key)
   })
 
   test('When inserting a new node to the end of another', () => {
@@ -115,7 +154,7 @@ describe('writeCharacter: Writes a character correctly', () => {
 
     const node = paragraphs[status.pindex][status.sindex]
 
-    expect(node.text[status.offset - 1]).toMatch(key)
+    expect(node.text[status.offset - 1]).toEqual(key)
   })
 
   test('When splitting the current node and inserting a new one', () => {
@@ -139,7 +178,7 @@ describe('writeCharacter: Writes a character correctly', () => {
 
     const node = paragraphs[status.pindex][status.sindex]
 
-    expect(node.text[status.offset - 1]).toMatch(key)
+    expect(node.text[status.offset - 1]).toEqual(key)
   })
 
   test('When inserting a new node to the end of a paragraph', () => {
@@ -163,7 +202,7 @@ describe('writeCharacter: Writes a character correctly', () => {
 
     const node = paragraphs[status.pindex][status.sindex]
 
-    expect(node.text[status.offset - 1]).toMatch(key)
+    expect(node.text[status.offset - 1]).toEqual(key)
   })
 
   test('When writing to an empty paragraph', () => {
@@ -187,6 +226,6 @@ describe('writeCharacter: Writes a character correctly', () => {
 
     const node = paragraphs[status.pindex][status.sindex]
 
-    expect(node.text[status.offset - 1]).toMatch(key)
+    expect(node.text[status.offset - 1]).toEqual(key)
   })
 })
