@@ -44,9 +44,9 @@ export type EditorState = {
 /* New types */
 
 export type Status = {
-  offset: number
   pindex: number
   sindex: number
+  offset: number
 }
 
 export type Coordinates = {

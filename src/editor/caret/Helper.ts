@@ -37,20 +37,20 @@ function incrementOffset(
   paragraphs: Array<Array<TextNode>>,
   status: Status
 ): Status | null {
-  let offset = status.offset + 1
   let pindex = status.pindex
   let sindex = status.sindex
+  let offset = status.offset + 1
 
   if (offset <= paragraphs[pindex][sindex].text.length) {
-    return { offset, pindex, sindex }
+    return { pindex, sindex, offset }
   } else {
     // Go to next span
-    offset = 1
     sindex++
+    offset = 1
   }
 
   if (sindex < paragraphs[pindex].length) {
-    return { offset, pindex, sindex }
+    return { pindex, sindex, offset }
   } else {
     // Go to next paragraph
     pindex++
@@ -59,7 +59,7 @@ function incrementOffset(
   }
 
   if (pindex < paragraphs.length) {
-    return { offset, pindex, sindex }
+    return { pindex, sindex, offset }
   } else {
     // Reach end of document
     return null
@@ -70,12 +70,12 @@ function decrementOffset(
   paragraphs: Array<Array<TextNode>>,
   status: Status
 ): Status | null {
-  let offset = status.offset - 1
   let pindex = status.pindex
   let sindex = status.sindex
+  let offset = status.offset - 1
 
   if (offset >= 1 || (offset >= 0 && sindex === 0)) {
-    return { offset, pindex, sindex }
+    return { pindex, sindex, offset }
   } else {
     // Go to previous span
     sindex--
@@ -83,7 +83,7 @@ function decrementOffset(
 
   if (sindex >= 0) {
     offset = paragraphs[pindex][sindex].text.length
-    return { offset, pindex, sindex }
+    return { pindex, sindex, offset }
   } else {
     // Go to previous paragraph
     pindex--
@@ -92,7 +92,7 @@ function decrementOffset(
   if (pindex >= 0) {
     sindex = paragraphs[pindex].length - 1
     offset = paragraphs[pindex][sindex].text.length
-    return { offset, pindex, sindex }
+    return { pindex, sindex, offset }
   } else {
     // Reach start of document
     return null
