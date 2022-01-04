@@ -18,6 +18,12 @@ export function bolditalic(): Style {
   return { bold: true, italic: true }
 }
 
+export function randomStyle(): Style {
+  const bold = Math.random() < 0.5
+  const italic = Math.random() < 0.5
+  return { bold, italic }
+}
+
 /*type Options = {
   nodes: number
 }

@@ -99,9 +99,9 @@ describe('function writeCharacter: Writes a character correctly', () => {
     const key = generateKey()
     const editorStyle = paragraphs[pindex][sindex].style
 
-    printBeforeWrite(status, key, editorStyle)
+    //printBeforeWrite(status, key, editorStyle)
     writeCharacter(paragraphs, status, key, editorStyle)
-    console.log(paragraphs)
+    //console.log(paragraphs)
 
     const node = paragraphs[status.pindex][status.sindex]
 
@@ -122,9 +122,9 @@ describe('function writeCharacter: Writes a character correctly', () => {
     const key = generateKey()
     const editorStyle = paragraphs[pindex][sindex + 1].style
 
-    printBeforeWrite(status, key, editorStyle)
+    //printBeforeWrite(status, key, editorStyle)
     writeCharacter(paragraphs, status, key, editorStyle)
-    console.log(paragraphs)
+    //console.log(paragraphs)
 
     const node = paragraphs[status.pindex][status.sindex]
 
@@ -148,9 +148,9 @@ describe('function writeCharacter: Writes a character correctly', () => {
     const nextStyle = paragraphs[pindex][sindex + 1].style
     const editorStyle = chooseDifferentStyle(prevStyle, nextStyle)
 
-    printBeforeWrite(status, key, editorStyle)
+    //printBeforeWrite(status, key, editorStyle)
     writeCharacter(paragraphs, status, key, editorStyle)
-    console.log(paragraphs)
+    //console.log(paragraphs)
 
     const node = paragraphs[status.pindex][status.sindex]
 
@@ -172,9 +172,9 @@ describe('function writeCharacter: Writes a character correctly', () => {
     const editorStyle = { ...paragraphs[pindex][sindex].style }
     editorStyle.bold = !editorStyle.bold
 
-    printBeforeWrite(status, key, editorStyle)
+    //printBeforeWrite(status, key, editorStyle)
     writeCharacter(paragraphs, status, key, editorStyle)
-    console.log(paragraphs)
+    //console.log(paragraphs)
 
     const node = paragraphs[status.pindex][status.sindex]
 
@@ -196,9 +196,9 @@ describe('function writeCharacter: Writes a character correctly', () => {
     const editorStyle = { ...paragraphs[pindex][sindex].style }
     editorStyle.bold = !editorStyle.bold
 
-    printBeforeWrite(status, key, editorStyle)
+    //printBeforeWrite(status, key, editorStyle)
     writeCharacter(paragraphs, status, key, editorStyle)
-    console.log(paragraphs)
+    //console.log(paragraphs)
 
     const node = paragraphs[status.pindex][status.sindex]
 
@@ -220,9 +220,9 @@ describe('function writeCharacter: Writes a character correctly', () => {
     const editorStyle = { ...paragraphs[pindex][sindex].style }
     editorStyle.bold = !editorStyle.bold
 
-    printBeforeWrite(status, key, editorStyle)
+    //printBeforeWrite(status, key, editorStyle)
     writeCharacter(paragraphs, status, key, editorStyle)
-    console.log(paragraphs)
+    //console.log(paragraphs)
 
     const node = paragraphs[status.pindex][status.sindex]
 
