@@ -1,26 +1,5 @@
 import { deleteCharacter } from '../../editor/Writer'
-import { generateExamples } from '../../editor/Examples'
-import { Status, TextNode, Style } from '../../editor/Types'
-
-function generateIndex(min: number, max: number) {
-  return Math.floor(Math.random() * (max - min + 1)) + min
-}
-
-function normal(): Style {
-  return { bold: false, italic: false }
-}
-
-function bold(): Style {
-  return { bold: true, italic: false }
-}
-
-function italic(): Style {
-  return { bold: false, italic: true }
-}
-
-function bolditalic(): Style {
-  return { bold: true, italic: true }
-}
+import { normal, bold, italic } from '../../editor/Examples'
 
 describe('function deleteCharacter: Deletes a character correctly', () => {
   test('From an empty node', () => {

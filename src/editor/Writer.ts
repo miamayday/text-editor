@@ -221,7 +221,7 @@ export function deleteCharacter(
   deleteAcrossNodes(paragraphs, status)
 }
 
-function insertNewline(
+export function insertNewline(
   paragraphs: Array<Array<TextNode>>,
   status: Status
 ): void {

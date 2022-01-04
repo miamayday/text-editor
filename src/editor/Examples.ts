@@ -2,16 +2,20 @@
 
 import { Style, TextNode } from './Types'
 
-function bold(): Style {
+export function normal(): Style {
+  return { bold: false, italic: false }
+}
+
+export function bold(): Style {
   return { bold: true, italic: false }
 }
 
-function italic(): Style {
+export function italic(): Style {
   return { bold: false, italic: true }
 }
 
-function normal(): Style {
-  return { bold: false, italic: false }
+export function bolditalic(): Style {
+  return { bold: true, italic: true }
 }
 
 /*type Options = {
