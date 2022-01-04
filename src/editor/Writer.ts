@@ -265,6 +265,10 @@ export function insertNewline(
   // Update paragraphs array
   paragraphs[status.pindex] = paragraph
   paragraphs.splice(status.pindex + 1, 0, newParagraph)
+
+  // Update status
+  status.pindex += 1
+  status.sindex = 0
 }
 
 export function editParagraphs(

@@ -52,9 +52,6 @@ function moveAfterNewline(
   pos: Coordinates,
   status: Status
 ): void {
-  status.pindex += 1
-  status.sindex = 0
-
   const p = document.querySelectorAll('.paragraph')[
     status.pindex
   ] as HTMLElement
