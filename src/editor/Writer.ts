@@ -269,6 +269,7 @@ export function insertNewline(
   // Update status
   status.pindex += 1
   status.sindex = 0
+  status.offset = 0
 }
 
 export function editParagraphs(

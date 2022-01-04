@@ -1,5 +1,6 @@
 /* This file contains functionality for positioning the caret
    to the next position according to arrow keys.
+   + Caret positioning in response to paragraph modification.
    
    Rules:
    - When moving from end of line to the start of next:
@@ -15,6 +16,9 @@ import * as Coords from './Coords'
 import { TextNode, Direction, Coordinates, Status } from '../Types'
 import { moveOffset } from './Helper'
 import config from '../../config'
+
+/* The following functions position the caret after a modification
+   has been made to the paragraphs. */
 
 function moveAfterWrite(pos: Coordinates, status: Status): void {
   const p = document.querySelectorAll('.paragraph')[
@@ -37,7 +41,6 @@ function moveAfterDelete(
   if (paragraphs[status.pindex][status.sindex].text.length === 0) {
     pos.x = config.PARAGRAPH_PADDING
     pos.y = p.offsetTop + config.ADJUST_Y
-    status.offset = 0
     return
   }
 
@@ -60,13 +63,14 @@ function moveAfterNewline(
     const [x, y] = Coords.getDocumentCoords(span, 0)
     pos.x = x
     pos.y = y
-    status.offset = 0
   }
 
   pos.x = config.PARAGRAPH_PADDING
   pos.y = p.offsetTop + config.ADJUST_Y
-  status.offset = 0
 }
+
+/* The following functions position the caret in response
+   to arrow key presses. */
 
 function calculateHorizontal(
   left: boolean,
