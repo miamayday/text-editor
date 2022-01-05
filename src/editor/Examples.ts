@@ -50,6 +50,7 @@ export function generateExamples() {
     style: normal(),
     text: ' elements. This is the se co   nd line of the first paragraph.'
   }
+  const n6: TextNode = { style: normal(), text: '' }
   const n7: TextNode = {
     style: italic(),
     text: 'This is another paragraph with text.'
@@ -59,8 +60,13 @@ export function generateExamples() {
     style: normal(),
     text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus placerat eleifend iaculis. Morbi orci urna, tristique in auctor id, ultrices sed neque. Suspendisse eget neque orci. Cras sed tempor nulla. Sed congue arcu id suscipit viverra. Vestibulum sit amet commodo erat. Sed egestas blandit ex, eget suscipit diam semper non. Sed id sagittis purus. Aenean placerat sapien id ultrices congue. Morbi congue lorem sed felis molestie, id porta justo pellentesque.'
   }
+  const n10: TextNode = { style: normal(), text: '' }
+  const n11: TextNode = {
+    style: normal(),
+    text: 'One morning, when Gregor Samsa woke from troubled dreams, he found himself transformed in his bed into a horrible vermin. He lay on his armour-like back, and if he lifted his head a little he could see his brown belly, slightly domed and divided by arches into stiff sections.'
+  }
 
-  return [[n1, n2, n3, n4, n5], [n7], [n8], [n9]]
+  return [[n1, n2, n3, n4, n5], [n6], [n7], [n8], [n9], [n10], [n11]]
 }
 
 const n1: TextNode = { style: normal(), text: 'This is an example text with ' }
@@ -84,7 +90,7 @@ const n9: TextNode = {
 
 export const examples: Array<Array<TextNode>> = [
   [n1, n2, n3, n4, n5],
-  //[n6],
+  [n6],
   [n7],
   [n8],
   [n9]

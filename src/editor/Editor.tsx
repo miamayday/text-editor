@@ -17,7 +17,7 @@ import * as CaretSetter from './caret/Setter'
 import * as CaretMover from './caret/Mover'
 import * as Writer from './Writer'
 // Example paragraphs
-import { examples } from './Examples'
+import { generateExamples } from './Examples'
 
 const defaultStyle: Style = {
   bold: false,
@@ -30,7 +30,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
     this.state = {
       style: defaultStyle,
       caret: false,
-      paragraphs: examples
+      paragraphs: generateExamples()
     }
 
     this.handleClick = this.handleClick.bind(this)
@@ -127,7 +127,15 @@ class Editor extends React.Component<EditorProps, EditorState> {
       this.state.key,
       this.state.style
     )
+
     this.setState({ ...newState, action: undefined })
+
+    // Clear window selection after modifying the paragraphs.
+    // Otherwise, there might be problems setting the caret
+    // according to a new range.
+    if (window.getSelection() !== null) {
+      window.getSelection()!.removeAllRanges()
+    }
   }
 
   /* EVENT HANDLERS */
@@ -219,6 +227,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
       if (offset === undefined) {
         return // Nothing can be done without offset
       }
+      console.log(window.getSelection()!)
 
       let sindex = 0
       // The clicked element is either a text node (span element)
