@@ -30,7 +30,8 @@ class Editor extends React.Component<EditorProps, EditorState> {
     this.state = {
       style: defaultStyle,
       caret: false,
-      paragraphs: generateExamples()
+      paragraphs:
+        props.paragraphs === undefined ? generateExamples() : props.paragraphs
     }
 
     this.handleClick = this.handleClick.bind(this)
@@ -67,11 +68,6 @@ class Editor extends React.Component<EditorProps, EditorState> {
   moveCaret(): void {
     if (!this.state.caret) {
       return
-    }
-
-    // Clear selection
-    if (window.getSelection() !== null) {
-      window.getSelection()!.removeAllRanges()
     }
 
     const { pos, status } = CaretMover.calculateCaretPosition(

@@ -1,5 +1,5 @@
-import { insertNewline } from '../../editor/Writer'
-import { normal, bold, italic, randomStyle } from '../../editor/Examples'
+import { insertNewline } from '../../../editor/Writer'
+import { normal, bold, italic, randomStyle } from '../../../editor/Examples'
 
 describe('function insertNewline: Inserts a newline correctly', () => {
   test('In an empty paragraph', () => {

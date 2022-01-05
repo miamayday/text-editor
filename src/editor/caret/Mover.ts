@@ -164,7 +164,7 @@ function calculateHorizontal(
 /**
  * Seeks the next line when moving up/down with arrow keys.
  */
-function seekLine(
+export function seekLine(
   up: boolean,
   paragraphs: Array<Array<TextNode>>,
   pos: Coordinates,

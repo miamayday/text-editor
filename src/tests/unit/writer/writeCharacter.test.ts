@@ -4,9 +4,9 @@
 - an empty paragraph
 */
 
-import { writeCharacter } from '../../editor/Writer'
-import { generateExamples } from '../../editor/Examples'
-import { Status, TextNode, Style } from '../../editor/Types'
+import { writeCharacter } from '../../../editor/Writer'
+import { generateExamples } from '../../../editor/Examples'
+import { Status, TextNode, Style } from '../../../editor/Types'
 
 /*const styles: Array<Style> = [
   { bold: false, italic: false },

@@ -1,14 +1,5 @@
 scroll pushing when caret moves out of view
 
-New issue (FIXED?):
-1. Click first position of last paragraph
-2. Press backspace
-3. Click last position of last paragraph
-4. focusOffset refers to somewhere else
-Why?
-- Range might correspond to the old paragraph?
-Fix: Clear ranges from window selection.
-
 selection...
 config to css
 

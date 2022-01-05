@@ -1,5 +1,5 @@
-import { deleteCharacter } from '../../editor/Writer'
-import { normal, bold, italic } from '../../editor/Examples'
+import { deleteCharacter } from '../../../editor/Writer'
+import { normal, bold, italic } from '../../../editor/Examples'
 
 describe('function deleteCharacter: Deletes a character correctly', () => {
   test('From an empty node', () => {

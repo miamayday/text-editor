@@ -12,7 +12,9 @@ export type TextNode = {
 
 /* Editor */
 
-export type EditorProps = {}
+export type EditorProps = {
+  paragraphs?: Array<Array<TextNode>>
+}
 
 export enum Direction {
   Up = 1,
