@@ -69,6 +69,11 @@ class Editor extends React.Component<EditorProps, EditorState> {
       return
     }
 
+    // Clear selection
+    if (window.getSelection() !== null) {
+      window.getSelection()!.removeAllRanges()
+    }
+
     const { pos, status } = CaretMover.calculateCaretPosition(
       this.state.direction!,
       this.state.paragraphs,
@@ -227,7 +232,6 @@ class Editor extends React.Component<EditorProps, EditorState> {
       if (offset === undefined) {
         return // Nothing can be done without offset
       }
-      console.log(window.getSelection()!)
 
       let sindex = 0
       // The clicked element is either a text node (span element)

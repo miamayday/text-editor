@@ -199,6 +199,9 @@ function seekLine(
       // New paragraph
       p = Coords.getParagraphElement(nextStatus.pindex)
       span = p.children[nextStatus.sindex] as HTMLElement
+      status.pindex = nextStatus.pindex
+      status.sindex = nextStatus.sindex
+      status.offset = nextStatus.offset
       // Empty paragraph
       if (paragraphs[nextStatus.pindex][nextStatus.sindex].text.length === 0) {
         pos.x = config.PARAGRAPH_PADDING
@@ -215,16 +218,16 @@ function seekLine(
 
     const [x, y] = Coords.getDocumentCoords(span, nextStatus.offset)
 
-    status.offset = nextStatus.offset
-    status.pindex = nextStatus.pindex
-    status.sindex = nextStatus.sindex
-
     if (!up && y !== pos.y) {
       console.log('Fix to start')
       pos.x = config.PARAGRAPH_PADDING
       pos.y = y
-      break
+      return
     }
+
+    status.offset = nextStatus.offset
+    status.pindex = nextStatus.pindex
+    status.sindex = nextStatus.sindex
 
     pos.x = x
     pos.y = y
@@ -257,8 +260,8 @@ function seekPosition(
     }
 
     if (nextStatus.pindex !== status.pindex) {
-      // Empty paragraph
-      console.log('Empty paragraph')
+      // Paragraph end
+      console.log('Paragraph end')
       return
     } else if (nextStatus.sindex !== status.sindex) {
       // New span
